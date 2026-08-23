@@ -1,36 +1,37 @@
 # Agentic Website Scanner — UX & Interaction Design Spec
 
-**Date:** 2026-08-23
-**Status:** Approved design (sections 1–6 approved by user in chat)
-**Companion doc:** `is-agentic-reverse-engineering-primer.md` (validated backend/engine specification)
+**Date:** 2026-08-23 · **Rev:** 2 (post adversarial review — incorporates all BLOCKER/MAJOR findings)
+**Status:** Approved design (sections approved in chat; rev-2 corrections from independent Fable 5 review)
+**Companion:** `is-agentic-reverse-engineering-primer.md` (validated research)
 
 ---
 
 ## 1. Product Definition
 
-A **local, free, open scanner** that scores how ready any public website is for
-AI agents — a faithful clone of is-agentic.com's UX patterns and Ora's validated
-check/scoring engine, running entirely on this machine.
+A **local, free scanner** scoring how ready any public website is for AI agents —
+a clone of is-agentic.com, running entirely on this machine.
 
 **Primary user:** the owner (single local user; no auth, no multi-tenancy).
-**Secondary consumers:** coding agents and scripts reading reports as JSON/Markdown.
+**Secondary consumers:** coding agents/scripts reading reports as JSON/Markdown.
+**Hard requirement:** outputs comparable to `npx is-agentic <domain>` so our
+logic can be validated live, side-by-side, on real websites (see §10).
 
 ### Locked decisions
 
 | # | Decision | Choice |
 |---|---|---|
-| 1 | Deployment & audience | Public-tool pattern, used locally; anonymous; stable open report URLs |
-| 2 | Surfaces (v1) | Web · Markdown negotiation · JSON API · CLI. (MCP deferred to v2) |
+| 1 | Deployment & audience | Local tool; anonymous; stable report URLs at `/scan/<host>` |
+| 2 | Surfaces (v1) | Web · Markdown negotiation · JSON API. **CLI: use the official `npx is-agentic` pointed at localhost** (`IS_AGENTIC_API_ORIGIN`) instead of shipping our own. MCP deferred to v2 |
 | 3 | Scan-time UX | Hybrid: SSE progress lives on the canonical `/scan/<host>` URL |
 | 4 | Report presentation | Progressive disclosure: hero → findings → excluded → full roster |
-| 5 | Stack | Next.js full-stack (App Router, TS) + portable `scanner-core` package |
-| 6 | Database | Postgres via local Docker, accessed through Drizzle ORM |
+| 5 | Stack | Next.js full-stack (App Router, TS) + pure `scanner-core` package |
+| 6 | Database | Postgres via local Docker, Drizzle ORM |
 
 ### Explicit non-goals (v1)
 
-Auth/accounts, cloud deployment, rate limiting/abuse controls, MCP server,
-OpenAPI spec page, scan-history diff UI (schema supports it; UI comes later),
-security/accessibility certification of scanned sites.
+Auth/accounts, cloud deploy, rate limiting/abuse controls, MCP server, own CLI
+package, OpenAPI page, background `freshness_refresh` rescans (manual Rescan
+button only), history-diff UI (schema supports it later).
 
 ---
 
@@ -39,30 +40,23 @@ security/accessibility certification of scanned sites.
 ```text
 agentic-website-scanner/
 ├─ apps/web/                 Next.js App Router (UI + API routes + SSE)
-├─ packages/scanner-core/    Pure TS engine library — no framework/DB imports
-│  ├─ src/fetcher.ts         multi-UA HTTP client (AI UAs, markdown-Accept)
-│  ├─ src/probes/            v1 probe modules → Finding[]  (see §5 scope)
-│  ├─ src/relevance.ts       applicability gating → naCheckIds + reasons
+├─ packages/scanner-core/    Pure TS engine — no framework/DB imports
+│  ├─ src/fetcher.ts         multi-UA HTTP client
+│  ├─ src/probes/            v1 probe modules (§5)
+│  ├─ src/relevance.ts       applicability gating (per-check table, §7)
 │  ├─ src/scorer.ts          validated formula (§4)
 │  ├─ src/engine.ts          orchestrator: async generator of ScanEvent
-│  └─ src/types.ts           ScanEvent union, Finding, CheckResult, Report
-├─ packages/cli/             thin client over the public HTTP contract
-└─ packages/contracts/       zod schemas: report JSON, SSE events, errors
+│  ├─ src/schema.ts          zod contracts: report JSON, SSE events, errors
+│  └─ src/catalog.json       pinned check catalog snapshot (contractVersion 1.20.1)
+└─ tools/compare.ts          comparison harness (§10)
 ```
 
-### Component responsibilities
-
-| Unit | Does | Depends on |
-|---|---|---|
-| `scanner-core` | `run(url) → AsyncIterable<ScanEvent>` + final report | fetcher only (`undici`) |
-| Job runner (`apps/web/lib/jobs.ts`) | execute scans in-process; persist results | scanner-core, DB, bus |
-| Event bus (in-proc EventEmitter behind interface) | pub/sub scan events | nothing |
-| API routes | REST + SSE + markdown negotiation | contracts, DB, bus |
-| UI | home, progress-on-report-URL, report rendering | contracts (typed events) |
-| CLI | wraps public HTTP contract for terminal use | contracts only |
-
-**Purity rule:** `scanner-core` never imports DB/framework code.
-`(url, options) → AsyncIterable<ScanEvent>` is its entire interface.
+Notes:
+- Contracts live as zod schemas inside `scanner-core/src/schema.ts` (single
+  package, no separate contracts/cli packages — proportionality).
+- Event distribution: plain in-process `EventEmitter`; no abstraction layer.
+- **Catalog drift guard:** on startup, assert pinned `contractVersion === 1.20.1`
+  when fetching Ora's `/api/checks`; warn loudly on mismatch.
 
 ---
 
@@ -70,94 +64,100 @@ agentic-website-scanner/
 
 ```text
 scans
-  id            uuid PK
-  target_url    text
-  host          text (normalized, indexed)
-  source        text  ('web' | 'cli' | 'api' | 'freshness_refresh')
-  status        text  ('queued'|'running'|'gating'|'scoring'|'complete'
-                       |'failed'|'cancelled')
-  error         text nullable
-  queued_at, started_at, completed_at  timestamptz
+  id uuid PK · target_url text · host text (normalized, indexed)
+  source text ('web'|'cli') · status text
+    ('queued'|'running'|'gating'|'scoring'|'complete'|'failed'|'cancelled')
+  error text nullable · contract_version text
+  queued_at/started_at/completed_at timestamptz
 
 checks
-  id            uuid PK
-  scan_id       uuid → scans (index)
-  check_id      text   -- stable vocabulary (124 ids), diff-join key
-  layer         text   ('discovery'|'accessibility'|'usability'|'payments')
-  tier          text   ('required'|'recommended'|'emerging')
-  bonus         boolean
-  status        text   ('pass'|'fail'|'warning'|'na'|'error'|'pending')
-  score         numeric
-  max_score     numeric
-  details       text nullable      -- observed evidence
-  recommendation text nullable
-  na_reason     text nullable
-  spec_url      text nullable
+  id uuid PK · scan_id uuid → scans (index) · check_id text
+  layer text · native_tier text        -- Ora 'required|recommended|emerging'
+  essentials_tier text                 -- 'essential'|'recommended'|null  (Ora mapping)
+  essentials_bonus_only boolean · essentials_excluded boolean
+  bonus boolean · occurrences int default 1   -- MCP-kind duplicates averaged
+  status text ('pass'|'fail'|'warning'|'na'|'error')
+  score numeric · max_score numeric · fraction numeric  -- score/max_score
+  details text null · recommendation text null · na_reason text null
 
 reports
-  scan_id       uuid PK → scans
-  prev_scan_id  uuid nullable → reports   -- revision chain for future diffs
-  score         int, grade text, label text
-  essential_earned/available/passing/total   numeric/int
-  recommended_earned/available/passing/total numeric/int
-  bonus_points  numeric, bonus_signals int
-  eligible_checks int
-  summary       text
-  top_fixes     jsonb
-  snapshot_at   timestamptz
+  scan_id uuid PK → scans · prev_scan_id uuid null → reports
+  score numeric NULLABLE              -- real tool allows null (auth-gated targets)
+  grade text · label text             -- ours; label bands §4
+  essential_earned raw numeric (+ serialized round(.,1))
+  recommended_earned raw numeric
+  bonus_points numeric · bonus_signals int · eligible_checks int
+  summary text (templated, v1) · top_fixes jsonb (top estGain, v1)
+  snapshot_at timestamptz
 ```
 
 **Rules**
 
-- **Latest-wins reads:** report pages render newest `complete` report per host.
-  All snapshots retained; `prev_scan_id` enables later "+N since last scan" and
-  historical diffing (`checks` join on `check_id` across two `scan_id`s).
-- **Duplicate collapse:** a request to scan a host already `queued|running`
-  returns the existing job's URL (simple early-return; no queue machinery).
-- **Freshness:** on report visit, snapshot older than **6 h** ⇒ subtle stale chip
-  + background rescan (`source='freshness_refresh'`); old report stays visible.
+- Latest-wins reads per host; all snapshots retained (`prev_scan_id` chain);
+  future diffing = `checks` join on `check_id` across two scans.
+- Duplicate collapse: scanning an already `queued|running` host returns the
+  existing job URL.
+- Freshness: reports >6 h old show a stale chip + manual Rescan button.
+  **No automatic background rescan** (cut as disproportionate for local use).
+- URL normalization: bare host ⇒ `https://<host>`; strip fragments;
+  report path keyed by hostname.
 
 ---
 
-## 4. Scoring (validated)
+## 4. Scoring — pinned to Ora's published model
 
-Roster: the **124-check vocabulary** extracted during research (primer §15.3),
-pruned to v1 probe scope per §5 — unscored roster entries are omitted, not
-zeroed, so `eligible_checks` reflects what actually ran.
+**Source of truth:** `GET https://ora.ai/api/checks?include=essentials`
+(pinned snapshot vendored to `catalog.json`; startup drift-guard asserts
+`contractVersion`).
 
-Formula (reproduced to ±0.1 on 7 domains against ground truth):
+Grouping uses **Ora's `essentialsTier` field — never the native `tier`**
+(the two diverge for 23+ checks; e.g. `agent-friendly-404` is native-
+`recommended` but Essential; `json-ld` native-`required` but Recommended).
 
 ```text
-Essential   = 80 × mean(fraction)   over eligible required-tier checks   // equal weight
-Recommended = 20 × mean(fraction)   over eligible recommended-tier checks
-Bonus       = min(5, 0.25 × Σ fraction)  over bonus-only checks with credit
-score       = round( trunc0.1(Essential) + trunc0.1(Recommended) + trunc0.1(Bonus) )
-grade       = A+ ≥95 · A ≥86 · B ≥70 · C ≥48 · D ≥28 · F else
-positive_signals = count of bonus-only checks earning any credit
+fraction      = score / max_score            (per eligible non-excluded check)
+error         ⇒ fraction 0, stays eligible
+passing       = count(fraction == 1)
+Essential     = 80 × mean(fraction | essentials_tier='essential', not bonus_only)
+Recommended   = 20 × mean(fraction | essentials_tier='recommended', not bonus_only)
+Bonus         = min(5, 0.25 × Σ fraction | essentials_bonus_only=true, fraction>0)
+positive_signals = count(bonus_only ∧ fraction>0)
+score         = round( trunc0.1(Essential) + trunc0.1(Rec) + trunc0.1(Bonus) )
 ```
 
-Gating runs before scoring: `relevance.ts` marks checks `na` with human-readable
-`na_reason`; N/A checks are excluded from every denominator.
+Serialization rules (for diff-comparability):
+- store raw earned values; **serialize `earned = round(raw, 1)`**
+- issues = eligible, non-bonus-only, fraction<1, ordered Essential→Recommended,
+  `failed`(fraction=0) before `partial`(0<fraction<1)
+
+`grade`: A+ ≥95 · A ≥86 · B ≥70 · C ≥48 · D ≥28 · F else (applies to this
+essentials score; Ora's native grade is different — do not mix).
+
+`label` bands (approximate, from 18 observed reports; diff labels advisory):
+≥85 "Strong technical baseline" · 70–85 "Ready with a few material gaps" ·
+48–70 "Important blockers remain" · 28–48 "Agents are likely to struggle" ·
+<28 F-band label TBD-from-observations at build time.
 
 ---
 
 ## 5. v1 Probe Scope
 
-Full 124-check roster is the target end-state. v1 implements the highest-value,
-fully-deterministic subset (~40 checks across all four layers), including at
-minimum every check family observed failing in our five captured reports:
+**Comparability policy:** pools are means, so a partial roster cannot produce
+comparable headline scores (spec rev-1 error). Therefore:
 
-- Discovery: brand/dev-resource discovery hooks, robots AI policy, agent rules
-- Accessibility(layer): sitemap, content-no-js, bot-detection/crawler reachability,
-  llms.txt family, JSON-LD family, metadata completeness, trust anchors,
-  markdown negotiation (+Vary), redirect hygiene, token budget, agent-friendly-404
-- Usability: OpenAPI spec, scoped permissions, rate-limit headers, JSON errors,
-  MCP well-known + handshake, onboarding friction signals, response-schema coverage
-- Payments: protocol presence probes (header/link-based detection only in v1)
-
-LLM-judged checks (onboarding prose quality, summaries beyond templated text)
-are v2. The engine emits roster metadata so adding probes later requires no
-scorer/consumer changes.
+- v1 implements the **complete non-MCP Essential pool plus all Recommended-pool
+  checks that are deterministic HTTP probes**, including (non-exhaustively):
+  oauth-support, public-api, public-api-docs, developer-portal,
+  agent-instruction, api-schema-analysis, function-calling-compat,
+  openapi-spec family, scoped-permissions, json-error-responses,
+  response-schema-coverage, sandbox-environment — closing the rev-1 gap.
+- Excluded from v1: LLM-judged checks, `wikipedia-presence`, search-dependent
+  checks (`brand-search-accuracy`, `agentic-search-specific` — external-search
+  backend; marked **advisory** in comparisons), payments protocols beyond
+  header/link detection, MCP-runtime handshake subchecks (manifest detection
+  only in v1).
+- Unscored roster entries are omitted from denominators; §10 defines how
+  comparison remains honest despite this.
 
 ---
 
@@ -167,77 +167,74 @@ Four screens: Home `/`, Report `/scan/[host]`, Docs `/docs`, Methodology `/metho
 
 ### Hero flow — first-time scan
 
-1. Home: URL input + "Scan" → client-side validation → optimistic navigate
-   (no spinner on home).
+1. Home: URL input → client validation → optimistic navigate (no spinner).
 2. `POST /api/scan` returns 202 `{report_url}` immediately.
-3. `/scan/<host>` shows live progress via SSE: determinate bar
-   (`completedChecks / totalChecks`), current phase line, last-N check ticker.
-4. On `scan_final`: same URL transitions to full report (SSR-quality render).
+3. `/scan/<host>` streams SSE progress: determinate bar
+   (`completedChecks/totalChecks`), phase line, last-N check ticker.
+4. Terminal event transitions same URL to the full report.
 
-SSE is an enhancement, never the source of truth: on reconnect or mid-scan
-navigation, page hydrates from DB state first, then attaches to the stream.
+SSE is enhancement, not source of truth: hydrate from DB first, attach to stream
+after; reconnect with backoff.
 
 ### Report page — progressive disclosure
 
-- **Hero:** score /100, grade, label, failed·partial·N/A counts,
-  **"Copy fix prompt"** button (copies all failed findings as a coding-agent
-  implementation brief), Rescan button.
-- **Findings** (open by default): grouped Discovery→Access→Usability→Payments;
-  ordered by `estGain` within group, where `estGain` for a failed/partial check
-  = points it would add to the displayed score if fully passed, computed by
-  re-running the scorer with that check set to pass (cheap, exact, no separate
-  weighting model). Each card = evidence → fix → verify command.
-  Never a bare "failed".
-- **Excluded** (collapsed): N/A checks with reasons.
-- **Full roster** (collapsed): all ran checks, filterable by status/tier/layer.
+- **Hero:** score/100, grade, label, counts, **Copy fix prompt** button
+  (failed findings as a coding-agent brief), Rescan button, stale chip if >6h.
+- **Findings** (open): grouped Discovery→Access→Usability→Payments, ordered by
+  `estGain` (= exact score delta if that check passed, computed by re-running
+  scorer); each card evidence → fix → verify command.
+- **Excluded** (collapsed): N/A with reasons. **Full roster** (collapsed):
+  filterable by status/tier/layer.
 
-### Machine consumption (same rows, negotiated)
+### Machine consumption
 
 ```text
-GET /scan/<host>                 Accept: text/html      → SSR report
-GET /scan/<host>                 Accept: text/markdown  → compact Markdown (Vary: Accept)
-GET /api/v1/report?url=<host>                           → latest completed JSON
-GET /api/scan/stream?target=<url>                       → SSE progress/replay/cache-hit
+GET /scan/<host>                  Accept: text/html|text/markdown (Vary: Accept)
+GET /api/v1/report?url=           PublicScanReport-compatible JSON (§10)
+GET /api/report/full?url=         our extended report (grade, layers, N/A list)
+GET /api/scan/stream?target=      SSE (real protocol names, §7)
 ```
-
-CLI (`packages/cli`): report API → stream fallback → short poll, mirroring the
-is-agentic CLI contract; prints score bar + findings; `--json` flag.
 
 ---
 
-## 7. API Contract (local-first, de-overengineered)
+## 7. API Contract
 
 | Method | Path | Behavior |
 |---|---|---|
-| POST | `/api/scan` `{url}` | validate → dedupe-collapse → create row → 202 `{target, report_url}` |
-| GET | `/api/v1/report?url=` | latest completed JSON; never starts scans |
-| GET | `/api/scan/stream?target=` | SSE: live attach · replay · cache-hit(`scan_archived`) |
-| GET | `/api/v1/checks` | static roster metadata |
+| POST | `/api/scan` `{url}` | validate → dedupe-collapse → 202 `{target, display_target, report_url}` |
+| GET | `/api/v1/report?url=` | latest completed; **schema copied verbatim from is-agentic's `PublicScanReport`** (`additionalProperties:false`, nullable score, tier enum incl. `bonus`) |
+| GET | `/api/report/full?url=` | extended: grade, per-layer detail, N/A reasons, estGain |
+| GET | `/api/scan/stream?target=` | SSE |
+| GET | `/api/v1/checks` | pinned catalog |
 
-No rate limiting, quotas, or abuse controls (local single-user).
-Errors are RFC 9457 `application/problem+json` with stable codes
-(`invalid_url`, `report_not_found`, `scan_failed`) — small cost, clean CLI errors.
+Errors: RFC 9457 problem+json with `type,title,status,detail,instance,code,resolution`.
+No rate limiting (local single user).
 
-### SSE event types
+### SSE protocol — real is-agentic/Ora event names (compatibility requirement)
 
-`scan_init` (roster+totals) · `discovery_phase` · `check_start` ·
-`check_complete` (persisted) · `relevance_assessed` (persisted na_reasons) ·
-`summary_ready` · `scan_final` (**authoritative post-gating score**) ·
-`scan_archived` · `scan_failed`.
+`kind_detecting` · `kind_detected` · `scan_init` (roster+totals) ·
+`layer_start`* · `check_start` · `check_complete` · `layer_complete` ·
+`relevance_assessed` (**our addition — carries gating results**) ·
+`summary_ready` · `scan_complete` · `scan_archived` · `error`.
 
-All shapes defined once in `packages/contracts` (zod); server, UI, CLI consume
-the same types.
+Cache-hit shape mirrors observed reality:
+`kind_detected → scan_complete{servedFromCache:true,resultAgeSeconds} → scan_archived`.
+
+*\* `layer_start` exists in Ora's documented protocol though rarely observed.*
+
+**Compatibility payoff:** because names/shapes match the real protocol,
+`IS_AGENTIC_API_ORIGIN=http://localhost:3000 npx is-agentic <host>` renders OUR
+reports through the OFFICIAL CLI renderer — the primary side-by-side harness.
 
 ---
 
 ## 8. Error Handling
 
-- Probe throws → `status='error'`, evidence records the error, scan completes
-  and scores around it.
-- Engine-level failure (DNS/TLS dead) → scan `failed`; honest error page +
-  rescan; ≤2 automatic retries on transient network errors.
-- Stale snapshots (>6h) → visible chip + background refresh; old data stays up.
-- Invalid input → inline client validation mirrored server-side.
+- Probe throws → `status='error'`, fraction 0, **stays eligible**, evidence
+  records the error; scan completes.
+- Engine-level failure (DNS/TLS dead) → scan `failed`, honest error page +
+  Rescan; ≤2 retries on transient network errors.
+- Invalid input → client validation mirrored server-side.
 
 ---
 
@@ -245,11 +242,36 @@ the same types.
 
 | Layer | Approach |
 |---|---|
-| Probes (unit) | Recorded fixtures from real harvested responses (soft-404 shells, blocked-UA pages, broken Vary headers) replayed against probes |
-| Scorer (unit) | Golden tests vs captured payload↔published-score pairs; property test: N/A exclusion never changes eligible scores |
-| Gating (unit) | Table-driven: marketing site vs API site activation |
-| Engine (integration) | Local fixture HTTP server serving good/bad pages; assert event sequence + final report |
-| Contracts | zod round-trip: engine events → serialize → UI/CLI parse |
-| E2E (Playwright) | hero flow, instant completed-report load, markdown negotiation |
+| Probes | Recorded fixtures harvested during research (soft-404 shells, blocked-UA pages, broken Vary) + a tiny fixture-recorder utility to capture new sites |
+| Scorer | Golden tests vs captured payload↔published pairs (vercel.com 63.5/16.8/5→85, eve.dev 55, meta.ai 32) using Ora `essentialsTier` mapping; property test: N/A exclusion never changes eligible scores; disambiguation test: trunc-sum vs floor(sum) |
+| Gating | Table-driven from the `naReason` corpus (auth-gated MCP, unreachable homepage cascades, below-bonus-threshold ax-*) |
+| Engine | Local fixture HTTP server; assert full event sequence + final report |
+| Contracts | zod round-trip vs real captured payloads (must parse real is-agentic JSON) |
+| E2E | hero flow, instant completed-report load, markdown negotiation |
 
-Definition of done per probe: fixture test + evidence string naming observation.
+---
+
+## 10. Comparison Harness (the validation goal)
+
+New top-level component — the point of the project:
+
+1. **Reference snapshots:** `tools/compare.ts fetch <host>` pulls
+   `ora.ai/api/score/<host>?include=essentials` (+`?format=audit`) and stores
+   versioned snapshots in Postgres (`reference_reports` table: raw payload +
+   fetched_at + scanned_at). Rate-limit aware: cache-first, ≤20 reads/session
+   (Ora 429s aggressively).
+2. **Per-check diff** (primary comparison — valid despite roster differences):
+   `id → {their fraction/status/tier/na, our fraction/status/tier/na}` +
+   eligible-set symmetric difference. Advisory flags for known-divergent checks
+   (search-dependent, wikipedia).
+3. **Reprojected score:** restrict *Ora's* fractions to our implemented set →
+   run our scorer → must equal our score on identical inputs (proves scorer).
+4. **Headline diff** (advisory until roster complete): score delta + `scanned_at`
+   gap (compare against their `scanned_at`, never wall-clock; snapshots lag).
+5. **Official-CLI harness:** `IS_AGENTIC_API_ORIGIN=http://localhost:3000
+   npx is-agentic <host>` must render our report identically-shaped to real
+   output; byte-level structural diff of terminal output.
+
+Exit criteria for "logic proven": per-check fractions match on overlapping
+eligible set; reprojected scores match exactly; official CLI renders both
+indistinguishably modulo values.

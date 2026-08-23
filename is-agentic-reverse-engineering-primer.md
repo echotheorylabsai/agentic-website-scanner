@@ -528,11 +528,13 @@ All scanned 2026-08-23 (captured live via Markdown-negotiated report URLs).
 |---|---:|---|---|---|---|
 | is-agentic.com | **100** | Strong technical baseline | 77.3/80 (9/10) | 17.7/20 (19/22) | +5 (28 signals) |
 | ora.ai | **99** | Strong technical baseline | 75.2/80 (12/14) | 18.6/20 (20/23) | +5 (48 signals) |
-| vercel.com | **86** | Strong technical baseline | 63.5/80 (8/11) | 17.6/20 (16/21) | +5 (36 signals) |
+| vercel.com | **86*** | Strong technical baseline | 63.5/80 (8/11) | 17.6/20 (16/21) | +5 (36 signals) |
 | eve.dev | **55** | Important blockers remain | 41.9/80 (4/11) | 10.2/20 (7/18) | +3.4 (14 signals) |
 | meta.ai | **32** | Agents are likely to struggle | 26.7/80 (2/9) | 3.9/20 (1/17) | +1.5 (10 signals) |
 
 *(is-agentic.com also returned `eligible_checks: 32` via the JSON API.)*
+
+*\* Snapshot note: vercel.com has since been rescanned by the live tool — newer captures show 85 with 16.8/20 recommended earned (33 eligible checks). Values above reflect our original capture date.*
 
 ### Cross-report insights
 
@@ -946,7 +948,7 @@ The `scan_complete` SSE frame carries the complete native scoring object -
 - Engine attribution: `"source": "ora.ai"`; result URL hosted at `ora.ai/<domain>`
 - **124 checks** in the roster (the article's "118" has since grown)
 - Status vocabulary: `pass` / `fail` / `warning` (= partial) / `na` (excluded) / `error` (probe itself errored — seen on meta.ai's `content-no-js`)
-- Tier vocabulary: `required` / `recommended` / `emerging`. **Caution:** these do NOT map 1:1 onto Vercel's Essential/Recommended/Bonus pools — see §15.7 (adversarial finding A4)
+- Tier vocabulary: `required` / `recommended` / `emerging`. **Caution:** these do NOT map 1:1 onto Vercel's Essential/Recommended/Bonus pools — see §15.7 A9 / §15.8
 - Every check carries: `id`, `name`, `maxScore`, `status`, `score`, `bonus` flag,
   `tier`, optional `specUrl`, `details` (evidence), `recommendation`,
   `naReason` (why excluded), and `estScoreGain` (prioritization weight)
