@@ -17,8 +17,8 @@ console.log("home captured");
 for (const d of domains) {
   console.log(`\n=== scanning ${d} via browser ===`);
   await page.goto("http://localhost:3100/", { waitUntil: "networkidle" });
-  await page.fill('input[aria-label="Website to scan"]', d);
-  await page.click('button[type="submit"]');
+  await page.fill('[data-testid="scan-input"]', d);
+  await page.click('[data-testid="scan-submit"]');
   // wait for navigation to /scan/<host>
   await page.waitForURL(`**/scan/${d}`, { timeout: 15000 });
 

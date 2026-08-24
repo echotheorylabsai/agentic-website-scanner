@@ -1,63 +1,32 @@
-"use client";
+import { db, schema } from "@/lib/db-bridge";
+import { desc, max, sql } from "drizzle-orm";
+import { HomeClient } from "./home-client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+export const dynamic = "force-dynamic";
 
-export default function Home() {
-  const router = useRouter();
-  const [target, setTarget] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const FEATURED = ["is-agentic.com", "vercel.com", "eve.dev", "meta.ai"];
 
-  async function go(t: string) {
-    const cleaned = t.trim().replace(/^https?:\/\//, "").replace(/\/$/, "");
-    if (!cleaned) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target: cleaned, source: "web" }),
-      });
-      if (!res.ok && res.status !== 202) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.title ?? `HTTP ${res.status}`);
-      }
-      router.push(`/scan/${encodeURIComponent(cleaned)}`);
-    } catch (e) {
-      setError(String(e instanceof Error ? e.message : e));
-      setBusy(false);
-    }
+export default async function Home() {
+  let recent: Array<{ host: string; score: number | null }> = [];
+  try {
+    const latestPerTarget = await db
+      .select({ target: schema.reports.target, score: max(schema.reports.score), host: sql<string>`min(${schema.reports.display_target})` })
+      .from(schema.reports)
+      .groupBy(schema.reports.target)
+      .orderBy(desc(max(schema.reports.scanned_at)))
+      .limit(10);
+    const seen = new Set<string>();
+    recent = latestPerTarget
+      .filter((r) => { const k = (r.host ?? r.target).toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
+      .map((r) => ({ host: r.host ?? r.target, score: r.score }));
+  } catch {
+    recent = []; // DB unreachable — page still renders (O1 fallback)
   }
 
-  return (
-    <main>
-      <div className="hero">
-        <h1>Is your website ready for AI agents?</h1>
-        <p>
-          We run 124 checks across discovery, accessibility, usability and payments —
-          the same roster and scoring as is-agentic.com, running locally.
-        </p>
-      </div>
-      <form
-        className="scan-form"
-        onSubmit={(e) => { e.preventDefault(); void go(target); }}
-      >
-        <input
-          placeholder="yourwebsite.com"
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          aria-label="Website to scan"
-        />
-        <button type="submit" disabled={busy}>{busy ? "Starting…" : "Scan"}</button>
-      </form>
-      {error && <p style={{ color: "var(--bad)" }}>{error}</p>}
-      <div className="examples">
-        {["vercel.com", "eve.dev", "meta.ai", "example.org"].map((d) => (
-          <button key={d} onClick={() => { setTarget(d); void go(d); }}>{d}</button>
-        ))}
-      </div>
-    </main>
-  );
+  const featuredScores = new Map(recent.map((r) => [r.host.toLowerCase(), r.score]));
+  const featured = FEATURED.map((h) => ({ host: h, score: featuredScores.get(h) ?? null }));
+  const featuredSet = new Set(FEATURED.map((h) => h.toLowerCase()));
+  const recentOnly = recent.filter((r) => !featuredSet.has(r.host.toLowerCase()));
+
+  return <HomeClient featured={featured} recent={recentOnly} />;
 }
