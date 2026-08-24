@@ -55,7 +55,7 @@ export type ReportIssue = z.infer<typeof reportIssue>;
 
 export const PROBLEM_CODES = [
   "invalid_url", "report_not_found", "scan_failed",
-  "scan_start_failed", "scan_interrupted", "rate_limit_excluded",
+  "scan_start_failed", "scan_interrupted", "rate_limit_exceeded",
 ] as const;
 export const problemCode = z.enum(PROBLEM_CODES);
 
@@ -83,7 +83,6 @@ const frame = <T extends z.ZodRawShape>(shape: T) =>
   z.object({ type: z.string(), ...shape }).passthrough();
 
 export const scanEvent = z.union([
-  frame({}),                                                                    // unknown/pass-through guard last
   z.object({ type: z.literal("kind_detecting"), timestamp: z.number().optional() }).passthrough(),
   z.object({ type: z.literal("kind_detected"), kind: z.string(), hint: z.string().optional(), timestamp: z.number().optional() }).passthrough(),
   z.object({
@@ -94,9 +93,9 @@ export const scanEvent = z.union([
     totalChecks: z.number().optional(),
     staticOnly: z.boolean().optional(),
   }).passthrough(),
-  z.object({ type: z.literal("discovery_phase"), step: z.string(), label: z.string(), stepIndex: z.number(), totalSteps: z.number(), timestamp: z.number().optional() }).passthrough(),
+  z.object({ type: z.literal("discovery_phase"), step: z.string().optional(), label: z.string().optional(), stepIndex: z.number().optional(), totalSteps: z.number().optional(), timestamp: z.number().optional() }).passthrough(), // late post-scan frames carry only {type,step}
   z.object({ type: z.literal("check_start"), layerId: z.string(), layerName: z.string(), checkId: z.string(), checkName: z.string(), mcpKind: z.null().optional(), mcpUrl: z.null().optional(), timestamp: z.number().optional() }).passthrough(),
-  z.object({ type: z.literal("check_complete"), layerId: z.string(), layerName: z.string(), checkId: z.string(), checkName: z.string(), status: z.enum(["pass", "fail", "warning", "na", "error"]), score: z.number(), maxScore: z.number(), details: z.string(), mcpKind: z.null().optional(), mcpUrl: z.null().optional(), timestamp: z.number().optional() }).passthrough(),
+  z.object({ type: z.literal("check_complete"), layerId: z.string(), layerName: z.string(), checkId: z.string(), checkName: z.string(), status: z.enum(["pass", "fail", "warning", "na", "error"]), score: z.number(), maxScore: z.number(), details: z.string(), bonus: z.boolean().optional(), mcpKind: z.null().optional(), mcpUrl: z.null().optional(), timestamp: z.number().optional() }).passthrough(),
   z.object({ type: z.literal("layer_start") }).passthrough(),
   z.object({ type: z.literal("layer_complete"), layerId: z.string(), layerName: z.string() }).passthrough(),
   z.object({ type: z.literal("relevance_assessed"), naCheckIds: z.array(z.string()), reasons: z.record(z.string(), z.string()), score: z.number().optional(), grade: z.string().optional() }).passthrough(),
@@ -104,6 +103,7 @@ export const scanEvent = z.union([
   z.object({ type: z.literal("scan_complete"), result: z.unknown() }).passthrough(),
   z.object({ type: z.literal("scan_archived") }).passthrough(),
   z.object({ type: z.literal("error"), message: z.string() }).passthrough(),
+  frame({}), // pass-through guard for unknown upstream event types — MUST stay last
 ]);
 
 export type ScanEvent = z.infer<typeof scanEvent>;
@@ -115,7 +115,6 @@ export function parseSseData(line: string): ScanEvent {
   return scanEvent.parse(JSON.parse(payload)) as ScanEvent;
 }
 
-export type ScanEventName = string;
 export function eventName(e: ScanEvent): string { return e.type; }
 
 // ---------------------------------------------------------------------------

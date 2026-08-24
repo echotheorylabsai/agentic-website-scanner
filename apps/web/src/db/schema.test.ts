@@ -13,7 +13,6 @@ describe("schema", () => {
     expect((t.reports as any).score.notNull).toBe(false);
   });
   it("scan status enum includes gating", () => {
-    // @ts-expect-error runtime check of enum values
     expect(t.scanStatus.enumValues).toContain("gating");
   });
 });

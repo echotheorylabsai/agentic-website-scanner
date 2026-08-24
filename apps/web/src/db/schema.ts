@@ -1,5 +1,5 @@
 import {
-  pgTable, pgEnum, serial, text, integer, timestamp, boolean, jsonb,
+  pgTable, pgEnum, uuid, text, integer, timestamp, boolean, jsonb,
   doublePrecision, uniqueIndex, index,
 } from "drizzle-orm/pg-core";
 
@@ -15,8 +15,10 @@ export const essentialsTier = pgEnum("essentials_tier", [
 
 /** Normalized target host + origin URL per scan. */
 export const scans = pgTable("scans", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   target: text("target").notNull(),          // normalized https://host
+  host: text("host").notNull(),              // bare hostname (report URL key)
+  contract_version: text("contract_version"), // catalog version used for this scan
   display_target: text("display_target").notNull(),
   status: scanStatus("status").notNull().default("queued"),
   source: text("source").notNull().default("web"), // web | cli | api
@@ -30,8 +32,8 @@ export const scans = pgTable("scans", {
  * essentials_tier: Ora vocabulary required|recommended|emerging (NOT 'essential').
  */
 export const checks = pgTable("checks", {
-  id: serial("id").primaryKey(),
-  scan_id: integer("scan_id").notNull().references(() => scans.id, { onDelete: "cascade" }),
+  id: uuid("id").primaryKey().defaultRandom(),
+  scan_id: uuid("scan_id").notNull().references(() => scans.id, { onDelete: "cascade" }),
   check_id: text("check_id").notNull(),
   name: text("name").notNull(),
   layer_id: text("layer_id").notNull(),      // discovery|accessibility|usability|payments
@@ -48,7 +50,7 @@ export const checks = pgTable("checks", {
   recommendation: text("recommendation"),
   na_reason: text("na_reason"),
   eligible: boolean("eligible").notNull().default(true),
-  occurrences: doublePrecision("occurrences"), // MCP dedup averaging weight
+  occurrences: integer("occurrences").notNull().default(1), // MCP dedup averaging weight
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [uniqueIndex("checks_scan_check_uq").on(t.scan_id, t.check_id)]);
 
@@ -57,8 +59,8 @@ export const checks = pgTable("checks", {
  * score is nullable until the scan completes; revision chain via prev_scan_id.
  */
 export const reports = pgTable("reports", {
-  id: serial("id").primaryKey(),
-  scan_id: integer("scan_id").notNull().references(() => scans.id),
+  id: uuid("id").primaryKey().defaultRandom(),
+  scan_id: uuid("scan_id").notNull().references(() => scans.id),
   prev_scan_id: integer("prev_scan_id"),
   target: text("target").notNull(),
   display_target: text("display_target").notNull(),
@@ -75,7 +77,7 @@ export const reports = pgTable("reports", {
 
 /** Reference snapshots fetched from the real tool / Ora for comparison harness. */
 export const referenceReports = pgTable("reference_reports", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   host: text("host").notNull(),
   source: text("source").notNull(),           // is-agentic-report | ora-score | ora-catalog | sse-capture
   payload: jsonb("payload").notNull(),

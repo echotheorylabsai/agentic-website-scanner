@@ -236,12 +236,11 @@ No rate limiting (local single user).
 
 ### SSE protocol — real is-agentic/Ora event names (compatibility requirement)
 
-Canonical frame order (single source of truth — also see §4 gating note):
-`kind_detecting → kind_detected → scan_init{roster} → discovery_phase×8 →
-scan_init{totalChecks,staticOnly:true} → (check_start→check_complete)×N →
-layer_complete×4 → scan_complete{pre-gating result object} →
-relevance_assessed{final essentials score+grade} → summary_ready → scan_archived`.
-Payload shapes in plan Task 2. `layer_start` documented upstream but never observed.
+Canonical frame order — the live capture is authoritative: `kind_detecting →
+kind_detected → scan_init{roster} → scan_init{totals} → discovery_phase×8 →
+check batch (batched starts, not 1:1 interleave) → layer_complete×4 →
+scan_complete{pre-gating result} → late discovery_phase×3 → relevance_assessed →
+summary_ready → scan_archived`.  `layer_start` documented upstream but never observed.
 `layer_start`* · `check_start` · `check_complete` · `layer_complete` ·
 `relevance_assessed` (real Ora event carrying `{naCheckIds,reasons,score,grade}`) ·
 `summary_ready` · `scan_complete` · `scan_archived` · `error`.

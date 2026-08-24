@@ -21,12 +21,7 @@ describe("contracts", () => {
   });
 
   it("parses every frame of the fresh SSE capture", async () => {
-    let lines: string[];
-    try {
-      lines = fx("sse-fresh.txt").split("\n").filter((l) => l.startsWith("data:"));
-    } catch {
-      return; // capture still in flight — skip rather than fail
-    }
+    const lines = fx("sse-fresh.txt").split("\n").filter((l) => l.startsWith("data:"));
     expect(lines.length).toBeGreaterThan(50);
     const events = lines.map(parseSseData);
     const names = new Set(events.map((e) => (e as any).type));
@@ -49,7 +44,20 @@ describe("contracts", () => {
 
   it("bonus-only rule matches validated expectations", () => {
     const byId = Object.fromEntries(vendoredCatalog.checks.map((c) => [c.id, c]));
-    expect(isBonusOnly(byId["markdown-negotiation-vary"])).toBe(false); // exception
-    expect(isBonusOnly(byId["llms-txt-formatting"] ?? byId["llms-txt-exists"])).toBeDefined();
+    // the single exception stays in the Essential pool
+    expect(isBonusOnly(byId["markdown-negotiation-vary"])).toBe(false);
+    // composite rule: native bonus OR essentialsBonusOnly ⇒ bonus-only pool
+    for (const id of ["llms-txt-exists", "mcp-server-card", "sitemap-lastmod"]) {
+      if (byId[id]) expect(isBonusOnly(byId[id]), id).toBe(true);
+    }
+    // negative case: a plain Essential check is not bonus-only
+    expect(isBonusOnly(byId["agent-friendly-404"])).toBe(false);
+  });
+
+  it("rejects malformed SSE frames per event type", () => {
+    expect(() => parseSseData('data: {"type":"check_complete","checkId":"x"}')).toThrow(); // missing required fields
+    expect(() => parseSseData('data: {"type":"error","nope":1}')).toThrow();
+    // unknown upstream types pass through the guard (last union member)
+    expect(parseSseData('data: {"type":"some_future_event","x":1}')).toBeDefined();
   });
 });
