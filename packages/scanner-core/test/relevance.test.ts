@@ -12,7 +12,7 @@ describe("applyRelevance — deterministic dependent-family gating", () => {
     const results = [
       r("api-error-model"), r("api-versioning-policy"), r("pagination-shape"),
       r("async-job-pattern"), r("response-schema-coverage"),
-      r("json-error-responses"), r("rate-limit-headers"), r("function-calling-compat"),
+      r("json-error-responses"), r("function-calling-compat"),
       r("rest-sdk-packages"), r("api-schema-analysis"),
       r("openapi-spec", "fail", 0), // detector fails normally
     ];
@@ -23,14 +23,24 @@ describe("applyRelevance — deterministic dependent-family gating", () => {
       const row = gated.find((g) => g.id === id)!;
       expect(row.eligible).toBe(false);
       expect(row.status).toBe("na");
-      expect(row.na_reason).toMatch(/No OpenAPI spec found/);
+      expect(row.na_reason).toBe("No REST API surface detected on this domain"); // captured Ora text (NA_TEXT.rest)
     }
-    for (const id of ["json-error-responses", "rate-limit-headers", "function-calling-compat", "rest-sdk-packages", "api-schema-analysis"]) {
+    // rate-limit-headers has its OWN combined gate (REST+GraphQL, captured Ora text) — asserted below
+    for (const id of ["json-error-responses", "function-calling-compat", "rest-sdk-packages", "api-schema-analysis"]) {
       const row = gated.find((g) => g.id === id)!;
       expect(row.eligible, id).toBe(true);
       expect(na.has(id)).toBe(false);
     }
     expect(gated.find((g) => g.id === "openapi-spec")!.na_reason).toBeUndefined();
+  });
+
+  it("rate-limit-headers: combined REST+GraphQL gate (captured Ora behavior on eve/example.org)", () => {
+    const ctx = newScanContext();
+    const { gated, assessed } = applyRelevance([r("rate-limit-headers")], ctx);
+    expect(assessed.naCheckIds).toEqual(["rate-limit-headers"]);
+    expect(gated[0].na_reason).toBe("No REST or GraphQL surface detected - rate-limit headers check not applicable");
+    const ok = applyRelevance([r("rate-limit-headers")], { ...newScanContext(), restSurface: true });
+    expect(ok.assessed.naCheckIds).toHaveLength(0);
   });
 
   it("keeps REST spec-dependent checks eligible when a spec was parsed", () => {

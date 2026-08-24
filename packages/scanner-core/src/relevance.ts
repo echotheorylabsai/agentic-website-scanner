@@ -40,8 +40,10 @@ export function applyRelevance(results: ProbeResult[], ctx: ScanContext): { gate
 
     // probes that already emitted na (homepage-unreachable cascade etc.)
     if (r.status === "na" && !naReason) naReason = r.details || "Not applicable for this domain";
-    else if (REST_SPEC_DEPENDENT.has(r.id) && !ctx.restSurface) {
-      naReason = "No OpenAPI spec found - check not applicable.";
+    else if (r.id === "rate-limit-headers" && !ctx.restSurface && !ctx.graphqlSurface) {
+      naReason = NA_TEXT.rateLimit;
+    } else if (REST_SPEC_DEPENDENT.has(r.id) && !ctx.restSurface) {
+      naReason = NA_TEXT.rest;
     } else if (GRAPHQL_FAMILY.has(r.id) && !ctx.graphqlSurface) {
       naReason = NA_TEXT.graphql;
     } else if (MCP_SUBCHECKS.has(r.id)) {

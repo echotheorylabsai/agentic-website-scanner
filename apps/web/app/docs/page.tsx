@@ -14,7 +14,7 @@ GET  /api/scan/stream?target=example.com               → SSE (real wire protoc
       </div>
       <div className="card">
         <h3>Official CLI against this server</h3>
-        <pre className="fix-prompt">{`IS_AGENTIC_API_ORIGIN=http://localhost:3000 npx is-agentic example.com`}</pre>
+        <pre className="fix-prompt">{`IS_AGENTIC_API_ORIGIN=http://localhost:3100 npx is-agentic example.com`}</pre>
         <p style={{ color: "var(--muted)" }}>
           The official is-agentic CLI renders reports from our endpoints — the primary
           fidelity harness for this clone.
@@ -22,7 +22,7 @@ GET  /api/scan/stream?target=example.com               → SSE (real wire protoc
       </div>
       <div className="card">
         <h3>Markdown negotiation</h3>
-        <pre className="fix-prompt">{`curl -H "Accept: text/markdown" http://localhost:3000/scan/example.com`}</pre>
+        <pre className="fix-prompt">{`curl -H "Accept: text/markdown" http://localhost:3100/scan/example.com`}</pre>
       </div>
     </main>
   );
