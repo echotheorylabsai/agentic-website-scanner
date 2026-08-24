@@ -1,0 +1,29 @@
+
+=== vercel.com: ours 92 vs theirs 85 · overlap 42, exact 35
+  [                  HIGH] content-no-js                      theirs=0.33   ours=1.00   
+  [                  HIGH] scoped-permissions                 theirs=0.40   ours=1.00   
+  [                  HIGH] org-schema-completeness            theirs=0.50   ours=1.00   
+  [                  HIGH] async-job-pattern                  theirs=0.50   ours=1.00   
+  [                  HIGH] function-calling-compat            theirs=1.00   ours=0.50   
+  [                   med] rest-sdk-packages                  theirs=0.67   ours=1.00   
+  [                   med] agent-instruction                  theirs=0.67   ours=0.33   
+
+=== eve.dev: ours 65 vs theirs 71 · overlap 34, exact 30
+  [                  HIGH] agent-instruction                  theirs=0.00   ours=1.00   
+  [                  HIGH] rest-sdk-packages                  theirs=0.67   ours=0.00   
+  [                   med] content-no-js                      theirs=0.67   ours=1.00   
+  [                   med] mcp-server                         theirs=0.33   ours=0.00   
+
+=== meta.ai: ours 25 vs theirs 32 · overlap 31, exact 22
+  [WE-NA'd-but-they-scored] rate-limit-headers                 theirs=0.00    No REST or GraphQL surface detected - rate-limit headers check not applicable
+  [                  HIGH] oauth-support                      theirs=1.00   ours=0.00   
+  [                  HIGH] bot-detection                      theirs=0.50   ours=0.00   
+  [                  HIGH] a2a-agent-card                     theirs=0.50   ours=0.00   
+  [                  HIGH] metadata-completeness              theirs=0.00   ours=0.50   
+  [                  HIGH] mcp-server-card                    theirs=0.50   ours=1.00   
+  [                  HIGH] api-schema-analysis                theirs=0.50   ours=0.00   
+  [                  HIGH] function-calling-compat            theirs=0.50   ours=0.00   
+  [                   med] agent-instruction                  theirs=0.67   ours=0.33   
+  [                   med] rest-sdk-packages                  theirs=0.33   ours=0.00   
+
+=== example.org: ours 35 vs theirs 51 · overlap 21, exact 21

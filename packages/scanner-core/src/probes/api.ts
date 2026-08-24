@@ -21,7 +21,7 @@ export class OpenApiSpecProbe implements Probe {
       }
     }
     ctx.openapi = null;
-    return [result(this.ids[0], "fail", 0, 7, "No OpenAPI specification found at conventional paths.", "Publish an OpenAPI 3.x spec and link it from your docs.")];
+    return [result(this.ids[0], "fail", 0, 7, "No OpenAPI/Swagger specification found", "Publish an OpenAPI 3.x spec and link it from your docs.")];
   }
 }
 
@@ -37,7 +37,7 @@ export class ScopedPermissionsProbe implements Probe {
     if (hasSecuritySchemes && scopes && opSecurity) return [result(this.ids[0], "pass", 5, 5, "Scoped permissions defined and enforced per-operation.")];
     if (hasSecuritySchemes && scopes) return [result(this.ids[0], "warning", 2, 5, "Scopes defined globally but not enforced per-operation.", "Reference security scopes at each operation so agents request least privilege.")];
     if (hasSecuritySchemes) return [result(this.ids[0], "warning", 2, 5, "Auth schemes defined without named scopes.")];
-    return [result(this.ids[0], "fail", 0, 5, "No securitySchemes/scopes in the API surface.", "Define scoped permissions (read:/write:) so agents can request least privilege.")];
+    return [result(this.ids[0], "fail", 0, 5, "No declared OAuth scopes, security schemes, or scoped-permission documentation found.", "Define scoped permissions (read:/write:) so agents can request least privilege.")];
   }
 }
 
@@ -65,7 +65,7 @@ export class RateLimitHeadersProbe implements Probe {
     const ra = h["ratelimit-remaining"] ?? h["x-ratelimit-remaining"];
     if (rl && ra) return [result(this.ids[0], "pass", 2, 2, `Rate-limit headers observed (Limit: ${rl}, Remaining: ${ra}).`)];
     if (rl || ra) return [result(this.ids[0], "warning", 1, 2, `Partial rate-limit headers (${rl ? `Limit: ${rl}` : `Remaining: ${ra}`}).`)];
-    return [result(this.ids[0], "fail", 0, 2, "No live rate-limit headers on API responses.", "Return RateLimit-* headers so agents can pace requests.")];
+    return [result(this.ids[0], "fail", 0, 2, "No REST rate-limit headers found on probed endpoints", "Return RateLimit-* headers so agents can pace requests.")];
   }
 }
 

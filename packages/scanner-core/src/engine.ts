@@ -13,7 +13,7 @@ import {
 } from "./probes/apiDerived";
 import { mcpProbes, McpWellKnownDiscoveryLateProbe, McpWellKnownDiscoveryProbe, McpServerProbe } from "./probes/mcp";
 import { AgentFriendly404Probe, RedirectHygieneProbe } from "./probes/http-semantics";
-import { applyRelevance } from "./relevance";
+import { applyRelevance, NA_TEXT, REST_SPEC_DEPENDENT, GRAPHQL_FAMILY, MCP_SUBCHECKS, PAYMENTS_FAMILY } from "./relevance";
 import type { GatedCheck } from "./relevance";
 import { joinCatalogFlags, scoreReport } from "./scorer";
 import type { RawScore, ScoredCheck } from "./scorer";
@@ -125,11 +125,78 @@ export async function* runScan(
 
   const emitted = new Set<string>();
 
-  for (const probe of ordered) {
+  // --- Phase 1: run home + detector probes to establish surface facts ---
+  const detectorSet = new Set<Probe>([homeProbe, ...detectors]);
+  for (const probe of [homeProbe, ...detectors]) {
     const layerOf = (id: string) => {
       const catRow = catalog.checks.find((c) => c.id === id);
       return { layerId: catRow?.layer ?? probe.layer, layerName: LAYER_NAMES[catRow?.layer ?? probe.layer] ?? probe.layer };
     };
+    for (const id of probe.ids) {
+      if (!emitted.has(id)) {
+        const catRow = catalog.checks.find((c) => c.id === id);
+        const { layerId, layerName } = layerOf(id);
+        yield { type: "check_start", layerId, layerName, checkId: id, checkName: catRow?.name ?? id, mcpKind: null, mcpUrl: null, timestamp: Date.now() };
+      }
+    }
+    try {
+      for (const r of await probe.run({ url, fetchAs, ctx })) {
+        if (emitted.has(r.id)) continue;
+        emitted.add(r.id);
+        results.push(r);
+        const catRow = catalog.checks.find((c) => c.id === r.id);
+        const { layerId, layerName } = layerOf(r.id);
+        yield {
+          type: "check_complete", layerId, layerName, checkId: r.id, checkName: catRow?.name ?? r.id,
+          status: r.status, score: r.score, maxScore: r.max_score, details: r.details,
+          ...(catRow?.bonus && r.score > 0 ? { bonus: true } : {}),
+          mcpKind: null, mcpUrl: null, timestamp: Date.now(),
+        };
+      }
+    } catch (err) {
+      for (const id of probe.ids) {
+        const maxScore = catalog.checks.find((c) => c.id === id)?.maxScore ?? 0;
+        results.push({ id, status: "error", score: 0, max_score: maxScore, details: `Probe failed: ${String(err)}` });
+        const { layerId, layerName } = layerOf(id);
+        yield { type: "check_complete", layerId, layerName, checkId: id, checkName: id, status: "error", score: 0, maxScore, details: `Probe failed: ${String(err)}`, mcpKind: null, mcpUrl: null, timestamp: Date.now() };
+      }
+    }
+  }
+
+  // --- Phase 2: deterministic gating AHEAD of emission (Ora-wire-faithful:
+  //     gated checks emit status:"na" + family text, like Ora's frames) ---
+  const naTextFor = (id: string): string | null => {
+    if (REST_SPEC_DEPENDENT.has(id) && !ctx.restSurface) return NA_TEXT.rest;
+    if (GRAPHQL_FAMILY.has(id) && !ctx.graphqlSurface) return NA_TEXT.graphql;
+    if (MCP_SUBCHECKS.has(id)) {
+      if (!ctx.mcpManifest && ctx.mcpHandshake === "none") return NA_TEXT.mcp;
+      if (ctx.mcpHandshake === "auth-gated") return NA_TEXT.mcpAuth;
+    }
+    if (id === "rate-limit-headers" && !ctx.restSurface && !ctx.graphqlSurface) return NA_TEXT.rateLimit;
+    if (PAYMENTS_FAMILY.has(id) && !ctx.commerceSignals) return NA_TEXT.commerce;
+    return null;
+  };
+
+  // --- Phase 3: remaining probes; gated ones emit na without running ---
+  for (const probe of dependent) {
+    const layerOf = (id: string) => {
+      const catRow = catalog.checks.find((c) => c.id === id);
+      return { layerId: catRow?.layer ?? probe.layer, layerName: LAYER_NAMES[catRow?.layer ?? probe.layer] ?? probe.layer };
+    };
+    // skip probes whose every id is deterministically gated — emit na frames instead
+    const gatedIds = probe.ids.filter((id) => !emitted.has(id) && naTextFor(id) !== null);
+    if (gatedIds.length === probe.ids.length) {
+      for (const id of gatedIds) {
+        emitted.add(id);
+        const naText = naTextFor(id)!;
+        const catRow = catalog.checks.find((c) => c.id === id);
+        const { layerId, layerName } = layerOf(id);
+        results.push({ id, status: "na", score: 0, max_score: catRow?.maxScore ?? 0, details: naText });
+        yield { type: "check_start", layerId, layerName, checkId: id, checkName: catRow?.name ?? id, mcpKind: null, mcpUrl: null, timestamp: Date.now() };
+        yield { type: "check_complete", layerId, layerName, checkId: id, checkName: catRow?.name ?? id, status: "na", score: 0, maxScore: catRow?.maxScore ?? 0, details: naText, mcpKind: null, mcpUrl: null, timestamp: Date.now() };
+      }
+      continue;
+    }
     for (const id of probe.ids) {
       if (!emitted.has(id)) {
         const catRow = catalog.checks.find((c) => c.id === id);

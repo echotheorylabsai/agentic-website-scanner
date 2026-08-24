@@ -1,0 +1,425 @@
+{
+ "_meta": {
+  "source": "docs/is-agentic-check-text-verbatim.md + docs/validation/ref-*.json",
+  "contractVersion": "1.20.1",
+  "gate": "\u22652-domain byte-match + datum audit + no-conflict + per-pair sign-off",
+  "knownDivergences": [
+   "meta.ai agent-crawler-reachability recommendation (report-issues channel) differs from catalog \u2014 1-in-60",
+   "meta.ai REST-family per-check na wording (we adopt the family-wide string observed on eve/example.org)",
+   "eve.dev ucp-support/acp-support na details carry LLM-tailored text \u2014 we serve the family string"
+  ]
+ },
+ "adopted": [
+  {
+   "checkId": "acp-delegate-payment",
+   "status": "na",
+   "channel": "details",
+   "text": "No commerce signals detected - agent-payment protocols are optional for non-commerce sites",
+   "provenance": [
+    "eve.dev",
+    "example.org",
+    "meta.ai",
+    "vercel.com"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "acp-support",
+   "status": "na",
+   "channel": "details",
+   "text": "No commerce signals detected - agent-payment protocols are optional for non-commerce sites",
+   "provenance": [
+    "example.org",
+    "meta.ai",
+    "vercel.com"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "agent-instruction",
+   "status": "fail",
+   "channel": "details",
+   "text": "No agent instruction file with when-to-use guidance found",
+   "provenance": [
+    "eve.dev",
+    "example.org"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "ap2-support",
+   "status": "na",
+   "channel": "details",
+   "text": "No commerce signals detected - agent-payment protocols are optional for non-commerce sites",
+   "provenance": [
+    "eve.dev",
+    "example.org",
+    "meta.ai",
+    "vercel.com"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "api-error-model",
+   "status": "na",
+   "channel": "details",
+   "text": "No REST API surface detected on this domain",
+   "provenance": [
+    "eve.dev",
+    "example.org"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "api-versioning-policy",
+   "status": "na",
+   "channel": "details",
+   "text": "No REST API surface detected on this domain",
+   "provenance": [
+    "eve.dev",
+    "example.org"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "async-job-pattern",
+   "status": "na",
+   "channel": "details",
+   "text": "No REST API surface detected on this domain",
+   "provenance": [
+    "eve.dev",
+    "example.org"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "code-fence-validity",
+   "status": "na",
+   "channel": "details",
+   "text": "No served markdown to evaluate",
+   "provenance": [
+    "example.org",
+    "meta.ai"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "docs-auth-gate",
+   "status": "na",
+   "channel": "details",
+   "text": "No content pages sampled",
+   "provenance": [
+    "example.org",
+    "meta.ai"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "json-ld",
+   "status": "fail",
+   "channel": "details",
+   "text": "No JSON-LD structured data found on homepage",
+   "provenance": [
+    "eve.dev",
+    "example.org"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "llms-txt-formatting",
+   "status": "fail",
+   "channel": "details",
+   "text": "No llms.txt found to evaluate quality",
+   "provenance": [
+    "example.org",
+    "meta.ai"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "mcp-well-known-discovery",
+   "status": "fail",
+   "channel": "details",
+   "text": "No MCP server URL discovered",
+   "provenance": [
+    "eve.dev",
+    "example.org",
+    "meta.ai"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "mpp-support",
+   "status": "na",
+   "channel": "details",
+   "text": "No commerce signals detected - agent-payment protocols are optional for non-commerce sites",
+   "provenance": [
+    "eve.dev",
+    "example.org",
+    "meta.ai",
+    "vercel.com"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "org-schema-completeness",
+   "status": "fail",
+   "channel": "details",
+   "text": "No JSON-LD found - Organization schema missing",
+   "provenance": [
+    "eve.dev",
+    "example.org"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "pagination-shape",
+   "status": "na",
+   "channel": "details",
+   "text": "No REST API surface detected on this domain",
+   "provenance": [
+    "eve.dev",
+    "example.org"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "rate-limit-headers",
+   "status": "fail",
+   "channel": "details",
+   "text": "No REST rate-limit headers found on probed endpoints",
+   "provenance": [
+    "meta.ai",
+    "vercel.com"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "rate-limit-headers",
+   "status": "na",
+   "channel": "details",
+   "text": "No REST or GraphQL surface detected - rate-limit headers check not applicable",
+   "provenance": [
+    "eve.dev",
+    "example.org"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "response-schema-coverage",
+   "status": "na",
+   "channel": "details",
+   "text": "No REST API surface detected on this domain",
+   "provenance": [
+    "eve.dev",
+    "example.org"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "sandbox-environment",
+   "status": "fail",
+   "channel": "details",
+   "text": "No sandbox or test environment found",
+   "provenance": [
+    "example.org",
+    "meta.ai"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "scoped-permissions",
+   "status": "fail",
+   "channel": "details",
+   "text": "No declared OAuth scopes, security schemes, or scoped-permission documentation found",
+   "provenance": [
+    "eve.dev",
+    "meta.ai"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "scoped-permissions",
+   "status": "na",
+   "channel": "details",
+   "text": "No declared OAuth scopes, security schemes, or scoped-permission documentation found",
+   "provenance": [
+    "eve.dev",
+    "example.org"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "sitemap",
+   "status": "fail",
+   "channel": "details",
+   "text": "No sitemap found",
+   "provenance": [
+    "example.org",
+    "meta.ai"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "sitemap-lastmod",
+   "status": "na",
+   "channel": "details",
+   "text": "No parsed sitemap entries to evaluate (the sitemap check covers existence)",
+   "provenance": [
+    "example.org",
+    "meta.ai"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "trust-anchors",
+   "status": "fail",
+   "channel": "details",
+   "text": "No trust anchor pages found with sufficient content (About, Contact, Privacy)",
+   "provenance": [
+    "example.org",
+    "meta.ai"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "ucp-support",
+   "status": "na",
+   "channel": "details",
+   "text": "No commerce signals detected - agent-payment protocols are optional for non-commerce sites",
+   "provenance": [
+    "example.org",
+    "meta.ai",
+    "vercel.com"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "x402-support",
+   "status": "na",
+   "channel": "details",
+   "text": "No commerce signals detected - agent-payment protocols are optional for non-commerce sites",
+   "provenance": [
+    "eve.dev",
+    "example.org",
+    "meta.ai",
+    "vercel.com"
+   ],
+   "datumAudit": "pass",
+   "signOff": "auto (datum-free)"
+  },
+  {
+   "checkId": "a2a-agent-card",
+   "status": "fail",
+   "channel": "details",
+   "text": "No A2A agent card found at /.well-known/agent-card.json",
+   "provenance": [
+    "sign-off: manual"
+   ],
+   "datumAudit": "pass (protocol constants/paths only)",
+   "signOff": "manual"
+  },
+  {
+   "checkId": "agent-friendly-404",
+   "status": "pass",
+   "channel": "details",
+   "text": "Nonexistent paths return a real HTTP 404. For full credit, include a short markdown body (site map links, where to look next) so agents can recover.",
+   "provenance": [
+    "sign-off: manual"
+   ],
+   "datumAudit": "pass (protocol constants/paths only)",
+   "signOff": "manual"
+  },
+  {
+   "checkId": "agent-friendly-404",
+   "status": "warning",
+   "channel": "details",
+   "text": "Nonexistent paths return a real HTTP 404. For full credit, include a short markdown body (site map links, where to look next) so agents can recover.",
+   "provenance": [
+    "sign-off: manual"
+   ],
+   "datumAudit": "pass (protocol constants/paths only)",
+   "signOff": "manual"
+  },
+  {
+   "checkId": "auth-md-exists",
+   "status": "fail",
+   "channel": "details",
+   "text": "No /auth.md found at site root",
+   "provenance": [
+    "sign-off: manual"
+   ],
+   "datumAudit": "pass (protocol constants/paths only)",
+   "signOff": "manual"
+  },
+  {
+   "checkId": "markdown-negotiation-vary",
+   "status": "pass",
+   "channel": "details",
+   "text": "Canonical URL serves text/markdown and text/html via Accept negotiation with Vary: Accept",
+   "provenance": [
+    "sign-off: manual"
+   ],
+   "datumAudit": "pass (protocol constants/paths only)",
+   "signOff": "manual"
+  },
+  {
+   "checkId": "mcp-server-card",
+   "status": "fail",
+   "channel": "details",
+   "text": "No MCP server card found at /.well-known/mcp/server-card.json",
+   "provenance": [
+    "sign-off: manual"
+   ],
+   "datumAudit": "pass (protocol constants/paths only)",
+   "signOff": "manual"
+  },
+  {
+   "checkId": "openapi-spec",
+   "status": "fail",
+   "channel": "details",
+   "text": "No OpenAPI/Swagger specification found",
+   "provenance": [
+    "sign-off: manual"
+   ],
+   "datumAudit": "pass (protocol constants/paths only)",
+   "signOff": "manual"
+  }
+ ],
+ "keepOurs": {
+  "bot-detection/pass": "Ora counts 6 UAs, we probe 3 \u2014 live datum mismatch",
+  "code-fence-validity/pass": "live doc count",
+  "developer-portal/pass": "live-discovered path",
+  "docs-auth-gate/pass": "live sampled-page counts",
+  "markdown-negotiation-vary/fail": "live CT/Vary values",
+  "redirect-hygiene/pass": "live page count",
+  "agent-crawler-reachability/pass": "Ora lists per-UA results for UAs we don't probe (ChatGPT-User etc.) \u2014 live datum mismatch",
+  "metadata-completeness/pass": "Ora's text lists their signal set (lang, og:image, og:type); we check a different set \u2014 datum mismatch",
+  "robots-agent-user-policy/pass": "semantic mismatch: Ora pass = no restriction; our pass = explicit directives exist"
+ }
+}

@@ -18,7 +18,7 @@ export class LlmsTxtFormattingProbe implements Probe {
   layer = "discovery" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
     const r = await fetchAs(`${url.origin}/llms.txt`);
-    if (r.status >= 300) return [result(this.ids[0], "fail", 0, 2, "/llms.txt missing — agents have no formatted discovery file.", "Publish /llms.txt with an H1 and a bulleted link list.")];
+    if (r.status >= 300) return [result(this.ids[0], "fail", 0, 2, "No llms.txt found to evaluate quality", "Publish /llms.txt with an H1 and a bulleted link list.")];
     const hasH1 = /^#\s+\S/m.test(r.body);
     const linkCount = (r.body.match(/\[[^\]]+\]\([^)]+\)/g) ?? []).length;
     return hasH1 && linkCount >= 3
@@ -40,7 +40,7 @@ export class SitemapProbe implements Probe {
   layer = "discovery" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
     const { xml } = await fetchSitemap(fetchAs, url.origin);
-    if (!xml) return [result(this.ids[0], "fail", 0, 2, "No valid sitemap.xml found.", "Publish a valid XML sitemap at /sitemap.xml.")];
+    if (!xml) return [result(this.ids[0], "fail", 0, 2, "No sitemap found", "Publish a valid XML sitemap at /sitemap.xml.")];
     const urls = (xml.match(/<loc>/g) ?? []).length;
     return urls > 0
       ? [result(this.ids[0], "pass", 2, 2, `Valid XML sitemap with ${urls} URL entr${urls === 1 ? "y" : "ies"}.`)]
@@ -53,7 +53,7 @@ export class SitemapLastmodProbe implements Probe {
   layer = "discovery" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
     const { xml } = await fetchSitemap(fetchAs, url.origin);
-    if (!xml) return [result(this.ids[0], "na", 0, 1, "No sitemap to check for lastmod.")];
+    if (!xml) return [result(this.ids[0], "na", 0, 1, "No parsed sitemap entries to evaluate (the sitemap check covers existence)")];
     return /<lastmod>/i.test(xml)
       ? [result(this.ids[0], "pass", 1, 1, "Sitemap includes <lastmod> freshness signals.")]
       : [result(this.ids[0], "fail", 0, 1, "Sitemap lacks <lastmod> timestamps.")];
@@ -103,7 +103,7 @@ export class AgentInstructionProbe implements Probe {
           : [result(this.ids[0], "warning", 1, 3, `Instruction file at ${p} found but no when-to-use guidance.`)];
       }
     }
-    return [result(this.ids[0], "fail", 0, 3, "No AGENTS.md or equivalent agent instruction file found.")];
+    return [result(this.ids[0], "fail", 0, 3, "No agent instruction file with when-to-use guidance found.", "Add an AGENTS.md (or llms.txt section) telling agents when to reach for your site.")];
   }
 }
 
@@ -116,7 +116,7 @@ export class MarkdownNegotiationVaryProbe implements Probe {
     const vary = r.headers["vary"];
     const isMd = ct.includes("text/markdown");
     if (isMd && vary && /accept/i.test(vary)) {
-      return [result(this.ids[0], "pass", 1, 1, `Markdown negotiation works: Accept: text/markdown → ${ct}; Vary: ${vary}`)];
+      return [result(this.ids[0], "pass", 1, 1, "Canonical URL serves text/markdown and text/html via Accept negotiation with Vary: Accept")];
     }
     return [result(this.ids[0], "fail", 0, 1,
       `Accept: text/markdown returned ${ct || "no content type"}${vary ? `; Vary: ${vary}` : "; no Vary header"}.`,

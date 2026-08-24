@@ -53,10 +53,10 @@ describe("applyRelevance — deterministic dependent-family gating", () => {
     expect(out.assessed.naCheckIds).toHaveLength(0);
   });
 
-  it("ax-* family cascades to N/A when homepage unfetchable", () => {
+  it("ax-* family is NOT gated (we emit no ax-* checks; gate removed as dead code)", () => {
     const ctx: ScanContext = { ...newScanContext(), homepage: null };
     const { assessed } = applyRelevance([r("ax-form-labeling")], ctx);
-    expect(assessed.naCheckIds).toEqual(["ax-form-labeling"]);
+    expect(assessed.naCheckIds).toEqual([]);
   });
 
   it("payments family stays eligible on positive evidence (detector sets commerceSignals)", () => {

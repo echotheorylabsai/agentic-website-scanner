@@ -41,7 +41,7 @@ export class SandboxEnvironmentProbe implements Probe {
     if (docs && /\bsandbox\b|test\s+(?:environment|mode|keys?)/i.test(docs.body)) {
       return [result(this.ids[0], "pass", 2, 2, "Sandbox / test-mode environment documented.")];
     }
-    return [result(this.ids[0], "fail", 0, 2, "No sandbox or test environment documented.")];
+    return [result(this.ids[0], "fail", 0, 2, "No sandbox or test environment found")];
   }
 }
 
@@ -59,7 +59,7 @@ export class AuthMdExistsProbe implements Probe {
         return [result(this.ids[0], "pass", 2, 2, `Agent authentication guide published at ${p}.`)];
       }
     }
-    return [result(this.ids[0], "fail", 0, 2, "No usable auth.md agent-authentication guide found.", "Publish /auth.md explaining how agents authenticate.")];
+    return [result(this.ids[0], "fail", 0, 2, "No /auth.md found at site root", "Publish /auth.md explaining how agents authenticate.")];
   }
 }
 

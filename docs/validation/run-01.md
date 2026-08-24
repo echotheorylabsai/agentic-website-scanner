@@ -78,3 +78,34 @@ Business logic for every deterministic check is now either **byte-matched to obs
 | Issue ordering | PARTIAL → FIXED — integer estGains collapsed ties; now fractional gains reproduce vercel's official order exactly; eve/meta have an unobservable intra-tie tie-break |
 | SSE protocol | PARTIAL → doc fixed — engine already matched capture (late discovery_phase straddles relevance_assessed 1+2); claim text corrected; per-type validation is required-fields + unknown-type rejection, not key-strict |
 | Label bands | CONFIRMED at all four data points (cutoffs between observations not uniquely provable with n=4) |
+
+---
+
+# Addendum: Deterministic Text Adoption (post run-01)
+
+**Scope:** Adopt is-agentic's deterministic text for checks exactly similar to ours. LLM text/checks out of scope. Plan independently reviewed (Opus 5, 3 rounds → amendments incorporated).
+
+## What changed
+- **`checkText.json`** — 35 adopted (check,status)→details pairs, each passing a 3-layer gate:
+  ≥2-domain byte-match → datum audit (Ora probe constants rejected: "6 AI agent user-agents", live counts) → no-conflict (pairs with cross-domain wording conflicts rejected unless branch reproducible) → per-pair manual sign-off.
+- **Fix lines**: catalog recommendation (Ora-authored) is now primary for all non-pass outcomes (137/137 official rows byte-match catalog).
+- **N/A channel**: gated N/A now sets `details` = na text (Ora-wire-faithful; previously stale probe text). Captured family strings adopted: REST, commerce, rate-limit (combined REST+GraphQL gate), MCP.
+- **Gating ahead of emission**: gated checks emit `status:"na"` + family text in SSE frames (matching Ora's wire format; previously `status:"error"` + probe text).
+- **Semantic alignments** (toward observed Ora behavior): code-fence-validity na-when-no-markdown (was free pass); agent-instruction/openapi-spec/sitemap/trust-anchors/json-ld/org-schema/scoped-permissions/sandbox/auth-md/rate-limit fail texts now byte-match Ora's captured strings; A2A card probe checks agent-card.json path.
+- **Kept ours** (datum mismatches, documented in checkText.json): bot-detection pass ("6 UAs" vs our 3), docs-auth-gate pass (live page counts), code-fence pass (live doc count), metadata-completeness pass (different signal sets), redirect-hygiene pass (live page count), developer-portal pass (live path), markdown-negotiation fail (live CT/Vary), agent-crawler-reachability pass (per-UA list for unprobed UAs), robots-agent-user-policy pass (semantic mismatch).
+
+## Score impact (all shifts toward Ora-alignment)
+
+| Domain | Before | After | Δ | Cause |
+|---|---|---|---|---|
+| vercel.com | 92 | 92 | 0 | — |
+| eve.dev | 65 | 65 | 0 | — |
+| meta.ai | 27 | 25 | −2 | code-fence na-alignment + rate-limit gate (Ora's own meta behavior: scored) |
+| example.org | 36 | 35 | −1 | rate-limit gate (matches Ora na ✓) |
+
+**Known temporal inconsistency (documented):** Ora's own eve.dev scans disagree on rate-limit-headers — older capture: na with our adopted text; fresh capture (score-71 run): scored 0.00. We follow the [static]-captured text.
+
+## Verification
+- 42/42 tests pass, tsc clean
+- C1 golden: every adopted (checkId,status)→text pair asserted present in emitted sources; family strings match NA_TEXT exactly
+- Per-check diff re-run: artifacts/deep-diff-post-text.txt

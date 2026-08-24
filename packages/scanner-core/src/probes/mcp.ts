@@ -51,7 +51,7 @@ export class McpWellKnownDiscoveryProbe implements Probe {
       }
     }
     ctx.mcpManifest = null;
-    return [result(this.ids[0], "fail", 0, 2, "No MCP discovery manifest at .well-known paths.")];
+    return [result(this.ids[0], "fail", 0, 2, "No MCP server URL discovered")];
   }
 }
 
@@ -115,7 +115,7 @@ export class McpServerCardProbe implements Probe {
     if (r.status < 300 && /"description"|"tools"/i.test(r.body)) {
       return [result(this.ids[0], "pass", 2, 2, "MCP server card describes tools for agents.")];
     }
-    return [result(this.ids[0], "fail", 0, 2, "No MCP server card found.")];
+    return [result(this.ids[0], "fail", 0, 2, "No MCP server card found at /.well-known/mcp/server-card.json")];
   }
 }
 
@@ -123,11 +123,13 @@ export class A2aAgentCardProbe implements Probe {
   ids = ["a2a-agent-card"] as const; // bonus
   layer = "discovery" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
-    const r = await fetchAs(`${url.origin}/.well-known/agent.json`);
-    if (r.status < 300 && /"name"|"capabilities"/i.test(r.body)) {
-      return [result(this.ids[0], "pass", 2, 2, "A2A agent card published at .well-known/agent.json.")];
+    for (const p of ["/.well-known/agent.json", "/.well-known/agent-card.json"]) {
+      const r = await fetchAs(`${url.origin}${p}`);
+      if (r.status < 300 && !/(<html|<!doctype)/i.test(r.body) && /"name"|"capabilities"/i.test(r.body)) {
+        return [result(this.ids[0], "pass", 2, 2, `A2A agent card published at ${p}.`)];
+      }
     }
-    return [result(this.ids[0], "fail", 0, 2, "No A2A agent card found.")];
+    return [result(this.ids[0], "fail", 0, 2, "No A2A agent card found at /.well-known/agent-card.json")];
   }
 }
 

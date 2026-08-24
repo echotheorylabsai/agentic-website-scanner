@@ -156,10 +156,12 @@ export function serializeReport(
   issues: Array<{ id: string; name: string; tier: string; result: "failed" | "partial"; details: string | null; recommendation: string | null }>;
 } {
   const { issues } = estGains(checks);
+  // A1: catalog recommendation (Ora-authored) is PRIMARY for non-pass outcomes;
+  // probe string is fallback. 137/137 official non-na rows byte-match catalog.
   const named = issues.map((i) => ({
     ...i,
     name: catalogNames?.get(i.id) ?? i.name,
-    recommendation: i.recommendation ?? catalogRecs?.get(i.id) ?? null,
+    recommendation: catalogRecs?.get(i.id) ?? i.recommendation ?? null,
   }));
   return {
     target: meta.target,

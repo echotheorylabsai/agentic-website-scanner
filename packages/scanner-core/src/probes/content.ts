@@ -94,7 +94,7 @@ export class JsonLdProbe implements Probe {
     }
     return [result(this.ids[0], "fail", 0, 4, parseErrors
       ? `${parseErrors} JSON-LD script(s) failed to parse.`
-      : "No JSON-LD structured data found on the homepage.")];
+      : "No JSON-LD structured data found on homepage")];
   }
 }
 
@@ -124,7 +124,7 @@ export class OrgSchemaCompletenessProbe implements Probe {
       const t = Array.isArray(n["@type"]) ? n["@type"].map(String) : [String(n["@type"] ?? "")];
       return t.some((x) => x.toLowerCase().includes("organization") || x.toLowerCase().includes("business"));
     }) as ({ contactPoint?: unknown; address?: unknown } | undefined);
-    if (!org) return [result(this.ids[0], "fail", 0, 2, "No Organization schema node found.")];
+    if (!org) return [result(this.ids[0], "fail", 0, 2, "No JSON-LD found - Organization schema missing")];
     const both = Boolean(org.contactPoint && org.address);
     return both
       ? [result(this.ids[0], "pass", 2, 2, "Organization schema includes contactPoint and address.")]
@@ -151,7 +151,7 @@ export class TrustAnchorsProbe implements Probe {
     const n = found;
     if (n >= 3) return [result(this.ids[0], "pass", 2, 2, "About, Contact and Privacy anchors all resolve.")];
     if (n >= 2) return [result(this.ids[0], "warning", 1, 2, "Most trust anchors (about/contact/privacy) resolve.")];
-    return [result(this.ids[0], "fail", 0, 2, `Only ${n} of 3 trust-anchor pages carry substantive content.`)];
+    return [result(this.ids[0], "fail", 0, 2, "No trust anchor pages found with sufficient content (About, Contact, Privacy)")];
   }
 }
 
@@ -160,7 +160,7 @@ export class DocsAuthGateProbe implements Probe {
   layer = "accessibility" as const;
   async run({ url, fetchAs, ctx }: ProbeContext): Promise<ProbeResult[]> {
     if (!ctx.homepage || ctx.homepage.status >= 400) {
-      return [result(this.ids[0], "na", 0, 2, "Homepage unreachable; docs auth-gate cannot be assessed.")];
+      return [result(this.ids[0], "na", 0, 2, "No content pages sampled")];
     }
     const paths = ["/docs", "/docs/getting-started"];
     for (const p of paths) {
@@ -196,19 +196,25 @@ export class CodeFenceValidityProbe implements Probe {
   ids = ["code-fence-validity"] as const;
   layer = "usability" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
-    // look for markdown surfaces and verify ``` fences are balanced
+    // Ora-aligned semantics: any served markdown surface is evaluated; fences must balance.
+    // na only when NO markdown surface exists at all (observed [static]: "No served markdown to evaluate")
+    let foundMd = false;
     for (const p of ["/llms.txt", "/docs.md", "/README.md"]) {
       try {
         const r = await fetchAs(`${url.origin}${p}`);
-        if (r.status < 300 && /```/.test(r.body)) {
+        if (r.status < 300 && r.body.trim()) {
+          foundMd = true;
           const fences = (r.body.match(/^```/gm) ?? []).length;
-          return fences % 2 === 0
-            ? [result(this.ids[0], "pass", 1, 1, "Code fences are balanced in served markdown.")]
-            : [result(this.ids[0], "fail", 0, 1, "Unbalanced code fences in served markdown — agents render broken code blocks.")];
+          if (fences % 2 !== 0) {
+            return [result(this.ids[0], "fail", 0, 1, "Unbalanced code fences in served markdown — agents render broken code blocks.")];
+          }
         }
       } catch { /* skip */ }
     }
-    return [result(this.ids[0], "pass", 1, 1, "No markdown surfaces published; nothing to violate.")];
+    if (foundMd) {
+      return [result(this.ids[0], "pass", 1, 1, "Code fences balanced in served markdown.")];
+    }
+    return [result(this.ids[0], "na", 0, 1, "No served markdown to evaluate")];
   }
 }
 
