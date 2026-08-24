@@ -107,9 +107,9 @@ reports
 ## 4. Scoring — pinned to Ora's published model
 
 **Source of truth:** `GET https://ora.ai/api/checks?include=essentials`
-(pinned snapshot vendored to `catalog.json`; vendored VERBATIM (real field names: `tier`, `applicability`, `maturity`,
-`specUrl`, …); drift check runs via `compare.ts check-catalog`, not every
-startup (preserves Ora read budget).
+(pinned snapshot vendored verbatim to `catalog.json` — real field names:
+`tier`, `applicability`, `maturity`, `specUrl`, …). Drift check runs via
+`compare.ts check-catalog` only — never at startup (preserves Ora read budget).
 
 Grouping uses **Ora's `essentialsTier` field — never the native `tier`**.
 Vocabulary correction (rev 3): `essentialsTier ∈ {required, recommended, emerging}`
@@ -117,7 +117,7 @@ Vocabulary correction (rev 3): `essentialsTier ∈ {required, recommended, emerg
 checks with `essentialsTier === 'required'`; `emerging` ⇒ bonus-only.
 
 **Bonus-only rule (validated across vercel/eve/meta, 233/233 checks):**
-`bonusOnly = essentialsBonusOnly OR nativeBonus`, single exception:
+`bonusOnly = essentialsBonusOnly OR nativeBonus` (live-confirmed on ax-*, oauth-protected-resource, mcp-auth-*), single exception:
 `markdown-negotiation-vary` stays in the Essential pool. Checks flagged
 `essentialsExcluded=true` leave every pool. Where available, Ora's per-domain
 `essentials.checks[].{tier,bonus,fraction}` overrides static flags as ground truth.
@@ -145,7 +145,7 @@ essentials score; Ora's native grade is different — do not mix).
 
 Gating is split by nature:
 - **Deterministic dependent-family N/A (our engine):** REST-dependent family
-  (×8), GraphQL family (×6), MCP sub-checks (×15), payments protocols (×6),
+  (×5), GraphQL family (×6), MCP sub-checks (×15), payments protocols (×6),
   `ax-*` family — N/A iff its detector found no surface ("No REST API surface
   detected" etc.). Detector checks themselves are NEVER auto-N/A'd by us.
 - **Product-level relevance (LLM-judged upstream):** advisory in comparisons,
@@ -172,12 +172,14 @@ comparable headline scores (spec rev-1 error). Therefore:
   oauth-support, public-api, public-api-docs, developer-portal,
   agent-instruction, api-schema-analysis, function-calling-compat,
   openapi-spec family, scoped-permissions, json-error-responses,
-  response-schema-coverage, sandbox-environment — closing the rev-1 gap.
+  response-schema-coverage, sandbox-environment, docs-auth-gate,
+  redirect hygiene, page token budget, code-fence validity,
+  api-error-model, api-versioning-policy, cli-tool — closing the rev-1 gap.
 - Excluded from v1: LLM-judged checks, `wikipedia-presence`, search-dependent
   checks (`brand-search-accuracy`, `agentic-search-specific` — external-search
   backend; marked **advisory** in comparisons), payments protocols beyond
-  header/link detection, MCP-runtime handshake subchecks (manifest detection
-  only in v1).
+  LLM-judged checks (`onboarding-friction` deferred), MCP-runtime handshake
+  subchecks beyond initialize-outcome detection (score depends on it — in v1).
 - Unscored roster entries are omitted from denominators; §10 defines how
   comparison remains honest despite this.
 
@@ -234,7 +236,12 @@ No rate limiting (local single user).
 
 ### SSE protocol — real is-agentic/Ora event names (compatibility requirement)
 
-`kind_detecting` · `kind_detected` · `scan_init` (roster+totals) ·
+Canonical frame order (single source of truth — also see §4 gating note):
+`kind_detecting → kind_detected → scan_init{roster} → discovery_phase×8 →
+scan_init{totalChecks,staticOnly:true} → (check_start→check_complete)×N →
+layer_complete×4 → scan_complete{pre-gating result object} →
+relevance_assessed{final essentials score+grade} → summary_ready → scan_archived`.
+Payload shapes in plan Task 2. `layer_start` documented upstream but never observed.
 `layer_start`* · `check_start` · `check_complete` · `layer_complete` ·
 `relevance_assessed` (real Ora event carrying `{naCheckIds,reasons,score,grade}`) ·
 `summary_ready` · `scan_complete` · `scan_archived` · `error`.

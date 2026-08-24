@@ -19,7 +19,7 @@
 - Issue order (observed): tier → access-signal set first (`agent-crawler-reachability`, `bot-detection`, `content-no-js`, `docs-auth-gate`, `redirect-hygiene`, `agent-friendly-404`, `ax-*`) → gain desc → native `estScoreGain` desc.
 - Gating is deterministic dependent-family N/A only (REST×8, GraphQL×6, MCP-subchecks×15, payments×6, ax-*). Detector checks never auto-N/A'd. Product-level relevance is advisory-only.
 - `/api/v1/report` parses real is-agentic payloads (strict zod, nullable score, tier enum incl `bonus`, details/recommendation nullable-but-required).
-- Canonical frame order (single source of truth): `kind_detecting → kind_detected → scan_init{roster} → discovery_phase×8 → scan_init{totalChecks,staticOnly:true} → (check_start→check_complete)×N → layer_complete×4 → scan_complete{provisional native score} → relevance_assessed{final essentials score+grade} → summary_ready → scan_archived`. Wire = `data:` lines only; `layer_start` kept in union but never emitted. Stream endpoint starts scans when missing; `scan_archived` only after DB commit.
+- Canonical frame order (single source of truth): `kind_detecting → kind_detected → scan_init{roster} → discovery_phase×8 → scan_init{totalChecks,staticOnly:true} → (check_start→check_complete)×N → layer_complete×4 → scan_complete{pre-gating result object} → relevance_assessed{final essentials score+grade} → summary_ready → scan_archived`. Wire = `data:` lines only; `layer_start` kept in union but never emitted. Stream endpoint starts scans when missing; `scan_archived` only after DB commit.
 - Markdown negotiation via `middleware.ts` rewrite → route handler (never `route.ts` beside `page.tsx`); `Vary: Accept` on both branches.
 - Catalog JSON vendored VERBATIM (real field names); drift check = `compare.ts check-catalog` command, not startup fetch.
 - Fetcher UA roster includes `ora-agent`.
@@ -97,7 +97,8 @@ type ScanContext = { homepage?: FetchedResponse;      // set by content probes
                      openapi?: FetchedResponse|null;  // set by openapi probe
                      mcpManifest?: FetchedResponse|null;
                      restSurface:boolean; graphqlSurface:boolean;
-                     commerceSignals:boolean };       // detectors write these
+                     restOrDocsEvidence:boolean; commerceSignals:boolean;
+                     mcpHandshake:'ok'|'auth-gated'|'none' }; // detector probes write
 ```
 
 Concrete: `agentFriendly404Probe.ids=['agent-friendly-404']`, `redirectHygieneProbe.ids=['redirect-hygiene']`.
@@ -130,7 +131,7 @@ Checks & rubrics:
 | json-ld-entity-linking | sameAs array ≥1 valid URL on identity node | 2/2 present; 0/2 absent |
 | org-schema-completeness | Organization node fields | contactPoint∧address 2/2; one 1/2 |
 | trust-anchors | /about,/contact,/privacy text≥500 each | 2/2 all; 2-of-3 1/2 warn |
-| docs-auth-gate | probe /docs + 2 doc-like paths for 401/403/login redirects | all public 1/1 pass; any auth wall 0/1 fail (evidence quotes status); unreachable homepage ⇒ N/A via gating |
+| docs-auth-gate | probe /docs + 2 doc-like paths for 401/403/login redirects | all public 2/2 pass; any auth wall 0/2 fail (evidence quotes status); unreachable homepage ⇒ N/A via gating |
 
 Writes `surface.homepage`. Sets estGain ordering input.
 
@@ -141,7 +142,7 @@ llms-txt-exists (1pt), llms-txt-formatting (2pt: H1+link list), sitemap (2/1/0 b
 openapi-spec (7pt: found+parses; records `ctx.openapi`), scoped-permissions (5pt rubric: named scopes in securitySchemes 5; schemes-no-scopes 2/5 warn; none 0), response-schema-coverage (2pt: pct>60 full, >30 half), rate-limit-headers (2pt live header observed), json-error-responses (4pt: wrong-method probe returns application/json problem body), public-api (7)/public-api-docs(3)/developer-portal(6) path+link heuristics with partial credit per signal found, oauth-support (5: well-known OAuth server responds), api-schema-analysis (2) + function-calling-compat (2: operationId/description coverage ratios), sandbox-environment (2: docs signals), auth-md-exists (2).
 
 **Task 8 — MCP + payments presence** (`src/probes/mcp.ts`)
-mcp-well-known-discovery (bonus 2: manifest JSON validity), mcp-server (6pt: handshake initialize OK Streamable 6/6; auth challenge 3/6 warn; invalid manifest 1/6; absent handled by gating), mcp-server-card (2 bonus), payments presence family (`mpp-support`,`x402-support`,`ucp-support`,`acp-support`,`acp-delegate-payment`,`ap2-support` — link/header/text detection; 2–3pt each, bonus-flagged per catalog), a2a-agent-card (2 bonus).
+mcp-well-known-discovery (bonus 2: manifest JSON validity), mcp-server (6pt: initialize OK over Streamable HTTP ⇒ 6/6 pass; auth challenge at initialize ⇒ 5/6 warning [observed vercel.com]; manifest present but invalid JSON ⇒ 2/6 warning [observed meta.ai]; absent handled by gating), mcp-server-card (2 bonus), payments presence family (`mpp-support`,`x402-support`,`ucp-support`,`acp-support`,`acp-delegate-payment`,`ap2-support` — link/header/text detection; 2–3pt each, bonus-flagged per catalog), a2a-agent-card (2 bonus).
 
 ---
 
@@ -163,8 +164,9 @@ Dependent-family table (data-driven; validated against vercel/eve/meta observed 
 | `ax-*` family | homepage fetched with HTML | "No server HTML available" / below-bonus-threshold |
 | `docs-auth-gate`, `redirect-hygiene` | homepage reachable | homepage-unreachable cascade reason |
 
-naReason strings are transcribed from SSE raw-object captures (`relevance_assessed.reasons`),
-NOT from the score API (which omits them). Harness treats Ora's per-domain
+naReason strings are sourced from the score API's native `layers[].checks[].details`
+(e.g. "No OpenAPI spec found - pagination shape check not applicable") — per-check real
+strings; no templates. (which omits them). Harness treats Ora's per-domain
 `essentials.checks` membership as eligibility ground truth in diffs.
 Hard rule encoded in test: detector checks (`openapi-spec`,`mcp-server`,`public-api`,`oauth-support`,`scoped-permissions`,`json-error-responses` where REST exists…) are never N/A'd here — they fail normally.
 
