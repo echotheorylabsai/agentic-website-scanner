@@ -1,0 +1,50 @@
+▲ / Is Agentic  vercel.com
+
+  █████████████████████████████████░░░    92 / 100
+                                          Strong technical baseline
+                                          2 failed · 3 partial
+
+SCORE BREAKDOWN
+  Essential       72.7 / 80    10 / 11 passed
+  Recommended     17.5 / 20    15 / 19 passed
+  Bonus                +2.1    9 positive signals
+
+FAILURES (2)
+
+1. FAIL · ESSENTIAL  Agent-friendly 404s
+   Evidence  Nonexistent paths return HTTP 200 with the app shell (soft-404). Agents
+             probing for resources conclude every path exists. Return a real HTTP 404
+             status for unknown paths.
+   Fix       Return a real HTTP 404 (or 410) status for nonexistent paths - never a 200
+             with your app shell.
+
+2. FAIL · RECOMMENDED  Rate limit response headers
+   Evidence  No live rate-limit headers on API responses.
+   Fix       Return RateLimit-* headers so agents can pace requests.
+
+PARTIAL (3)
+
+3. PARTIAL · RECOMMENDED  MCP server / manifest
+   Evidence  MCP server live at /mcp but initialize requires authentication (HTTP 307
+             redirect).
+   Fix       Build an MCP (Model Context Protocol) server exposing your API as tools.
+             Use Streamable HTTP transport for full score. This lets Claude, ChatGPT,
+             and other AI agents call your product natively.
+
+4. PARTIAL · RECOMMENDED  Agent instruction / when-to-use
+   Evidence  Instruction file at /agents.md found but no when-to-use guidance.
+   Fix       Tell agents when to reach for you: add a 'when to use this' section to your
+             llms.txt (or a dedicated agent-instructions file) that names your best-fit
+             use cases and how an agent should call you. Be specific about the jobs you
+             are right for - generic marketing copy does not read as guidance.
+
+5. PARTIAL · RECOMMENDED  Function calling compatibility
+   Evidence  Operation descriptions sparse (ratio 0.94) — add per-operation summaries
+             for tool use.
+   Fix       Ensure API endpoints have unique operation IDs, typed schemas, and
+             descriptions compatible with LLM function-calling formats.
+
+REPORT
+  URL      https://agentic.local/scan/vercel.com
+  Scanned  2026-08-24T14:30:36.286Z
+  Checks   30 eligible

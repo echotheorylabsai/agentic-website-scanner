@@ -1,0 +1,138 @@
+▲ / Is Agentic  meta.ai
+
+  ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░    27 / 100
+                                          Agents are likely to struggle
+                                          17 failed · 4 partial
+
+SCORE BREAKDOWN
+  Essential         20 / 80    2 / 10 passed
+  Recommended      5.2 / 20    3 / 16 passed
+  Bonus                +1.8    7 positive signals
+
+FAILURES (17)
+
+1. FAIL · ESSENTIAL  Content without JavaScript
+   Evidence  Only 7 chars of server-rendered text — agents that never run JavaScript see
+             an empty page.
+   Fix       Server-side render your homepage so AI crawlers see meaningful content
+             without JavaScript. Ensure an H1 and 500+ chars of text in raw HTML.
+
+2. FAIL · ESSENTIAL  Agent crawler reachability
+   Evidence  AI crawlers hard-blocked: gptbot→403, claudebot→403, perplexitybot→403.
+   Fix       Allowlist the major AI crawler/agent User-Agents (ChatGPT-User, ClaudeBot,
+             Google-Extended, ora-agent, DeepSeekBot) in your WAF, bot-detection rules,
+             and robots.txt so agents can reach your homepage.
+
+3. FAIL · ESSENTIAL  Not blocked by bot detection
+   Evidence  Bot-detection challenge served to automated agents (HTTP 403).
+   Fix       Allowlist known AI crawler user-agents at the edge.
+
+4. FAIL · ESSENTIAL  OpenAPI spec published
+   Evidence  No OpenAPI specification found at conventional paths.
+   Fix       Publish an OpenAPI 3.x spec and link it from your docs.
+
+5. FAIL · ESSENTIAL  Scoped permissions
+   Evidence  No securitySchemes/scopes in the API surface.
+   Fix       Define scoped permissions (read:/write:) so agents can request least
+             privilege.
+
+6. FAIL · ESSENTIAL  Markdown content negotiation (acceptmarkdown.com)
+   Evidence  Accept: text/markdown returned text/html; charset=utf-8; Vary: rsc,
+             next-router-state-tree, next-router-prefetch, next-router-segment-prefetch.
+   Fix       Serve text/markdown when requested and set Vary: Accept on HTML responses.
+
+7. FAIL · ESSENTIAL  OAuth 2.0 support
+   Evidence  No OAuth support detected.
+   Fix       Implement OAuth 2.0 for API authentication. Publish your authorization
+             server metadata at /.well-known/oauth-authorization-server.
+
+8. FAIL · RECOMMENDED  JSON-LD structured data
+   Evidence  No JSON-LD structured data found on the homepage.
+   Fix       Add JSON-LD structured data to your homepage using the identity type that
+             matches your site - SoftwareApplication for products, Organization or
+             LocalBusiness for companies, Person for personal sites, Article for blogs -
+             with name, description, url, and type-appropriate fields (offers, sameAs,
+             author) so AI can parse your identity programmatically.
+
+9. FAIL · RECOMMENDED  Organization schema completeness
+   Evidence  No Organization schema node found.
+   Fix       Add Organization JSON-LD that includes both contactPoint (with email/phone
+             and contactType) and address (PostalAddress). This lets AI verify your
+             business legitimacy and answer contact queries.
+
+10. FAIL · RECOMMENDED  Trust anchor pages
+   Evidence  Only 0 of 3 trust-anchor pages carry substantive content.
+   Fix       Publish real /about, /contact, and /privacy pages with at least 500
+             characters of content each. These are the pages AI agents check to verify
+             your business is legitimate before recommending you.
+
+11. FAIL · RECOMMENDED  Sitemap exists
+   Evidence  No valid sitemap.xml found.
+   Fix       Publish a valid XML sitemap at /sitemap.xml.
+
+12. FAIL · RECOMMENDED  Rate limit response headers
+   Evidence  No live rate-limit headers on API responses.
+   Fix       Return RateLimit-* headers so agents can pace requests.
+
+13. FAIL · RECOMMENDED  Public API/docs linked from homepage
+   Evidence  No public API documentation pages found.
+   Fix       Publish API documentation at a discoverable URL (/docs, /api, /developers).
+             Include authentication, endpoints, and example requests.
+
+14. FAIL · RECOMMENDED  Developer portal
+   Evidence  No developer portal detected.
+   Fix       Create a developer portal at /developers with API keys, documentation,
+             quickstart guides, and a sandbox environment.
+
+15. FAIL · RECOMMENDED  Public API with reachable endpoints
+   Evidence  No public API surface detected.
+   Fix       Expose a public REST or GraphQL API. AI agents need programmatic access -
+             not just a web UI - to integrate with your product.
+
+16. FAIL · RECOMMENDED  API schema complexity analysis
+   Evidence  No OpenAPI spec found - nothing to analyse for reusable schemas.
+   Fix       Make your API spec self-describing: a unique operationId and a description
+             on every operation, typed parameters, and response schemas. For GraphQL, a
+             fully typed schema with a documented cost or rate limit reads best.
+
+17. FAIL · RECOMMENDED  Function calling compatibility
+   Evidence  No OpenAPI spec found - operations cannot be evaluated for LLM tool use.
+   Fix       Ensure API endpoints have unique operation IDs, typed schemas, and
+             descriptions compatible with LLM function-calling formats.
+
+PARTIAL (4)
+
+18. PARTIAL · ESSENTIAL  Agent-friendly 404s
+   Evidence  Fake path returned HTTP 401 instead of 404.
+   Fix       Return a real HTTP 404 (or 410) status for nonexistent paths - never a 200
+             with your app shell, which makes agents believe every path exists. For full
+             credit, give the 404 response a short markdown body pointing agents at your
+             sitemap, llms.txt, or docs index. Verify with `curl -s -o /dev/null -w
+             "%{http_code}" https://yourdomain.com/some-path-that-does-not-exist` - it
+             must print 404.
+
+19. PARTIAL · RECOMMENDED  MCP server / manifest
+   Evidence  MCP discovery path serves an HTML page instead of a valid JSON manifest —
+             agents cannot discover tools.
+   Fix       Build an MCP (Model Context Protocol) server exposing your API as tools.
+             Use Streamable HTTP transport for full score. This lets Claude, ChatGPT,
+             and other AI agents call your product natively.
+
+20. PARTIAL · RECOMMENDED  Metadata completeness
+   Evidence  Only 1 of 6 metadata signals present in server HTML.
+   Fix       Add all four signals to your homepage: <link rel="canonical">, <html
+             lang="...">, <meta property="og:image">, and <meta property="og:type">.
+             Agents use these for entity resolution and attribution.
+
+21. PARTIAL · RECOMMENDED  Agent instruction / when-to-use
+   Evidence  Instruction file at /.well-known/agents.md found but no when-to-use
+             guidance.
+   Fix       Tell agents when to reach for you: add a 'when to use this' section to your
+             llms.txt (or a dedicated agent-instructions file) that names your best-fit
+             use cases and how an agent should call you. Be specific about the jobs you
+             are right for - generic marketing copy does not read as guidance.
+
+REPORT
+  URL      https://agentic.local/scan/meta.ai
+  Scanned  2026-08-24T14:31:08.317Z
+  Checks   26 eligible
