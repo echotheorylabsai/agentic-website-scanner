@@ -1,22 +1,22 @@
-import type { Catalog } from "./schema.js";
-import { vendoredCatalog } from "./schema.js";
-import { makeFetcher } from "./fetcher.js";
-import { newScanContext } from "./probes/types.js";
-import type { ProbeResult, Probe } from "./probes/types.js";
-import { contentProbes } from "./probes/content.js";
-import { discoveryProbes } from "./probes/discovery.js";
-import { OpenApiSpecProbe, PublicApiProbe, JsonErrorResponsesProbe, ResponseSchemaCoverageProbe, ScopedPermissionsProbe, OAuthSupportProbe, RateLimitHeadersProbe, PublicApiDocsProbe, DeveloperPortalProbe } from "./probes/api.js";
+import type { Catalog } from "./schema";
+import { vendoredCatalog } from "./schema";
+import { makeFetcher } from "./fetcher";
+import { newScanContext } from "./probes/types";
+import type { ProbeResult, Probe } from "./probes/types";
+import { contentProbes } from "./probes/content";
+import { discoveryProbes } from "./probes/discovery";
+import { OpenApiSpecProbe, PublicApiProbe, JsonErrorResponsesProbe, ResponseSchemaCoverageProbe, ScopedPermissionsProbe, OAuthSupportProbe, RateLimitHeadersProbe, PublicApiDocsProbe, DeveloperPortalProbe } from "./probes/api";
 import {
   ApiSchemaAnalysisProbe, FunctionCallingCompatProbe, SandboxEnvironmentProbe,
   AuthMdExistsProbe, CliToolProbe, ApiErrorModelProbe, ApiVersioningPolicyProbe,
   PaginationShapeProbe, AsyncJobPatternProbe, RestSdkPackagesProbe,
-} from "./probes/apiDerived.js";
-import { mcpProbes, McpWellKnownDiscoveryProbe, McpServerProbe } from "./probes/mcp.js";
-import { AgentFriendly404Probe, RedirectHygieneProbe } from "./probes/http-semantics.js";
-import { applyRelevance } from "./relevance.js";
-import type { GatedCheck } from "./relevance.js";
-import { joinCatalogFlags, scoreReport } from "./scorer.js";
-import type { RawScore, ScoredCheck } from "./scorer.js";
+} from "./probes/apiDerived";
+import { mcpProbes, McpWellKnownDiscoveryProbe, McpServerProbe } from "./probes/mcp";
+import { AgentFriendly404Probe, RedirectHygieneProbe } from "./probes/http-semantics";
+import { applyRelevance } from "./relevance";
+import type { GatedCheck } from "./relevance";
+import { joinCatalogFlags, scoreReport } from "./scorer";
+import type { RawScore, ScoredCheck } from "./scorer";
 
 export interface EngineEvent {
   type: string;
@@ -105,12 +105,19 @@ export async function* runScan(
   const discovery = discoveryProbes();
   const homeProbe = content[0]; // ContentNoJsProbe fetches the homepage into ctx
   const restContent = content.slice(1);
-  const detectors: Probe[] = [new OpenApiSpecProbe(), new McpWellKnownDiscoveryProbe(), new McpServerProbe(), new PublicApiProbe()];
+  const detectors: Probe[] = [
+    new OpenApiSpecProbe(), new ScopedPermissionsProbe(),
+    new McpWellKnownDiscoveryProbe(), new McpServerProbe(),
+  ];
   const dependent: Probe[] = [
     ...restContent,
     ...discovery,
     new JsonErrorResponsesProbe(),
+    new OAuthSupportProbe(), new RateLimitHeadersProbe(),
+    new PublicApiDocsProbe(), new DeveloperPortalProbe(),
+    new PublicApiProbe(),
     ...apiDerivedProbes(),
+    ...mcpProbes().filter((p) => !(p instanceof McpWellKnownDiscoveryProbe) && !(p instanceof McpServerProbe)),
     new AgentFriendly404Probe(), new RedirectHygieneProbe(),
   ];
   const ordered: Probe[] = [homeProbe, ...detectors, ...dependent];

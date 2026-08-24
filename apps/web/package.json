@@ -1,12 +1,24 @@
 {
   "name": "web",
   "private": true,
-  "scripts": { "test": "vitest run", "dev": "next dev" },
+  "scripts": {
+    "test": "vitest run",
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000"
+  },
   "dependencies": {
     "@agentic-scanner/core": "workspace:*",
     "drizzle-orm": "^0.44.0",
+    "next": "^15.5.23",
     "postgres": "^3.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "zod": "^3.24.0"
   },
-  "devDependencies": { "drizzle-kit": "^0.30.0" }
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "drizzle-kit": "^0.30.0"
+  }
 }

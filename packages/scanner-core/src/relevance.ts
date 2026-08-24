@@ -1,4 +1,4 @@
-import type { ProbeResult, ScanContext } from "./probes/types.js";
+import type { ProbeResult, ScanContext } from "./probes/types";
 
 /** A check after deterministic gating. */
 export interface GatedCheck extends ProbeResult {

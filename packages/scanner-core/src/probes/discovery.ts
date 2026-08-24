@@ -1,5 +1,5 @@
-import type { Probe, ProbeResult, ProbeContext } from "./types.js";
-import { result } from "./types.js";
+import type { Probe, ProbeResult, ProbeContext } from "./types";
+import { result } from "./types";
 
 /** Discovery-file probes (Task 6). */
 export class LlmsTxtExistsProbe implements Probe {

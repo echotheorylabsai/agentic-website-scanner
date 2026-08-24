@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import * as t from "./schema.js";
+import * as t from "./schema";
 
 describe("schema", () => {
   const cols = (tbl: any) => Object.keys(tbl);

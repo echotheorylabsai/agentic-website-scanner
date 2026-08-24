@@ -1,6 +1,6 @@
-import type { Probe, ProbeResult, ProbeContext } from "./types.js";
-import { result } from "./types.js";
-import { specText } from "./apiUtils.js";
+import type { Probe, ProbeResult, ProbeContext } from "./types";
+import { result } from "./types";
+import { specText } from "./apiUtils";
 
 /** Spec-derived + docs-derived API probes (Task 7 cont.). */
 export class ApiSchemaAnalysisProbe implements Probe {

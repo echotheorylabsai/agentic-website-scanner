@@ -1,5 +1,5 @@
-import type { Probe, ProbeResult, ProbeContext } from "./types.js";
-import { result } from "./types.js";
+import type { Probe, ProbeResult, ProbeContext } from "./types";
+import { result } from "./types";
 
 function stripTags(html: string): string {
   return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ");

@@ -1,5 +1,5 @@
-import type { Catalog } from "./schema.js";
-import type { GatedCheck } from "./relevance.js";
+import type { Catalog } from "./schema";
+import type { GatedCheck } from "./relevance";
 
 /**
  * Scorer — reproduces the validated is-agentic/Ora essentials formula:

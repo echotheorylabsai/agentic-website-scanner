@@ -23,9 +23,10 @@ export const scans = pgTable("scans", {
   status: scanStatus("status").notNull().default("queued"),
   source: text("source").notNull().default("web"), // web | cli | api
   error_message: text("error_message"),
-  started_at: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+  queued_at: timestamp("queued_at", { withTimezone: true }).defaultNow().notNull(),
+  started_at: timestamp("started_at", { withTimezone: true }),
   completed_at: timestamp("completed_at", { withTimezone: true }),
-}, (t) => [index("scans_target_idx").on(t.target)]);
+}, (t) => [index("scans_target_idx").on(t.target), index("scans_host_idx").on(t.host)]);
 
 /**
  * One row per check result per scan.
@@ -61,7 +62,7 @@ export const checks = pgTable("checks", {
 export const reports = pgTable("reports", {
   id: uuid("id").primaryKey().defaultRandom(),
   scan_id: uuid("scan_id").notNull().references(() => scans.id),
-  prev_scan_id: integer("prev_scan_id"),
+  prev_scan_id: uuid("prev_scan_id"),
   target: text("target").notNull(),
   display_target: text("display_target").notNull(),
   report_url: text("report_url").notNull(),   // canonical /scan/<host>
@@ -69,6 +70,10 @@ export const reports = pgTable("reports", {
   essential_earned: doublePrecision("essential_earned"),
   recommended_earned: doublePrecision("recommended_earned"),
   bonus_earned: doublePrecision("bonus_earned"),
+  bonus_signals: integer("bonus_signals"),
+  eligible_checks: integer("eligible_checks"),
+  summary: text("summary"),                   // agenticSummary
+  top_fixes: jsonb("top_fixes"),
   score: integer("score"),                    // nullable until complete
   grade: text("grade"),
   label: text("label"),

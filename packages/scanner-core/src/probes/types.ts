@@ -1,4 +1,4 @@
-import type { FetchedResponse, UaName } from "../fetcher.js";
+import type { FetchedResponse, UaName } from "../fetcher";
 
 export type CheckId = string;
 export type CheckStatus = "pass" | "fail" | "warning" | "na" | "error";
