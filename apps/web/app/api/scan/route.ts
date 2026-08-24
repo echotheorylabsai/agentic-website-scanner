@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 /** POST /api/scan — enqueue a scan (dedupe-collapsed). 202 with job info. */
 export async function POST(req: Request) {
-  let body: { target?: string; source?: string };
+  let body: { target?: string; source?: string; force?: boolean };
   try {
     body = await req.json();
   } catch {
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ type: "about:blank", title: "Invalid URL", status: 400, code: "invalid_url" }, { status: 400 });
   }
 
-  const report = await latestReport(target);
+  const report = body.force ? null : await latestReport(target);
   if (report && isFresh(report)) {
     return NextResponse.json({
       status: "fresh",
@@ -43,8 +43,14 @@ export async function GET(req: Request) {
   if (!target) {
     return NextResponse.json({ type: "about:blank", title: "Missing target", status: 400, code: "invalid_url" }, { status: 400 });
   }
-  const running = getRunning(target);
-  const report = await latestReport(target);
+  let normalized: string;
+  try {
+    normalized = normalizeTarget(target).toString();
+  } catch {
+    return NextResponse.json({ type: "about:blank", title: "Invalid url", status: 400, code: "invalid_url" }, { status: 400 });
+  }
+  const running = getRunning(normalized);
+  const report = await latestReport(normalized);
   return NextResponse.json({
     running: Boolean(running),
     bufferedFrames: running?.buffer.length ?? 0,

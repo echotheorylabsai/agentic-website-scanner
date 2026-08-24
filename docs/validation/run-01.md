@@ -15,8 +15,8 @@
 ## Formula validation (the core claim)
 
 - Golden fixtures reproduce Ora published numbers exactly: **vercel 63.5/16.8/5→85 · eve 55 · meta 32** ✔
-- Reprojection (their per-check fractions through our scorer) == their published score on vercel/meta and eve-v1 ✔
-- Fresh eve snapshot reproduces to 70 vs published 71 — ±1 rounding artifact (Ora's essentials map ships fractions rounded to 2dp; internal math uses exact rationals)
+- Reprojection (their per-check fractions through our scorer) == their published score on vercel/meta and eve-v1 ✔ (artifacts in `artifacts/`)
+- Fresh eve snapshot reproduces to 70 vs published 71 — **input-precision bound**: Ora's essentials map ships fractions rounded to 2dp while their internal math uses exact rationals; component rounding matches their displayed breakdown. Bounded ±1.
 
 ## Per-check accuracy (overlapping checks)
 
@@ -58,6 +58,10 @@
 ## Official CLI fidelity
 
 `IS_AGENTIC_API_ORIGIN=http://localhost:3100 npx is-agentic <host>` renders our reports indistinguishably from real ones (score bar, breakdown table, ordered issues with evidence + fixes). SSE wire protocol byte-compatible (flat `{type,...}` frames, canonical order incl. cache-hit triple).
+
+## Artifacts
+
+Persisted under `artifacts/`: per-domain stream captures (`stream-*.txt`), served reports (`report-*.json`), full per-check diff (`deep-diff.txt`). Regenerate with `tools/deepdiff.py`.
 
 ## Conclusion
 

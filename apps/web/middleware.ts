@@ -14,9 +14,9 @@ export function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = "/api/scan/markdown";
     url.searchParams.set("host", decodeURIComponent(host));
-    const headers = new Headers(req.headers);
-    headers.set("x-markdown-host", decodeURIComponent(host));
-    const res = NextResponse.rewrite(url, { headers });
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-markdown-host", decodeURIComponent(host));
+    const res = NextResponse.rewrite(url, { request: { headers: requestHeaders } });
     res.headers.set("Vary", "Accept");
     return res;
   }

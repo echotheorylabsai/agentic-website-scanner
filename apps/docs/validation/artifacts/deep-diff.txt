@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/tmp/deepdiff.py", line 7, in <module>
+    catalog = json.load(open("packages/scanner-core/src/catalog.json"))
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'packages/scanner-core/src/catalog.json'

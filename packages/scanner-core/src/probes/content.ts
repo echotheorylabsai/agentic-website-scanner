@@ -146,7 +146,8 @@ export class TrustAnchorsProbe implements Probe {
     // homepage footer links to anchor pages count even if slugs differ
     const home = ctx.homepage?.body ?? "";
     const linked = ["/about", "/contact", "/privac"].filter((k) => new RegExp(`href="[^"]*${k}`, "i").test(home)).length;
-    const found = Math.max(ok.filter(Boolean).length ? Math.ceil(ok.filter(Boolean).length * 2) : 0, linked);
+    const direct = ok.filter(Boolean).length;
+    const found = Math.max(direct, linked);
     const n = found;
     if (n >= 3) return [result(this.ids[0], "pass", 2, 2, "About, Contact and Privacy anchors all resolve.")];
     if (n >= 2) return [result(this.ids[0], "warning", 1, 2, "Most trust anchors (about/contact/privacy) resolve.")];

@@ -96,7 +96,7 @@ export class JsonErrorResponsesProbe implements Probe {
       if (best === 1) {
         return [result(this.ids[0], "warning", 1, 4, "Error statuses returned but bodies are not application/json.", "Return RFC 9457 problem+json bodies on API errors.")];
       }
-      return [result(this.ids[0], "warning", 1, 4, "Probe path accepted DELETE — no error contract observable at /api.")];
+      return [result(this.ids[0], "fail", 0, 4, "No JSON error contract observable at /api paths.", "Return RFC 9457 problem+json bodies on API errors.")];
     } catch {
       return [result(this.ids[0], "error", 0, 4, ctx.restSurface ? "Network failure during error-probe." : "No API surface to probe for error contracts.")];
     }

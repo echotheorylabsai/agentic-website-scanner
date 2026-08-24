@@ -131,13 +131,21 @@ export async function* runScan(
       return { layerId: catRow?.layer ?? probe.layer, layerName: LAYER_NAMES[catRow?.layer ?? probe.layer] ?? probe.layer };
     };
     for (const id of probe.ids) {
-      const catRow = catalog.checks.find((c) => c.id === id);
-      const { layerId, layerName } = layerOf(id);
-      yield { type: "check_start", layerId, layerName, checkId: id, checkName: catRow?.name ?? id, mcpKind: null, mcpUrl: null, timestamp: Date.now() };
+      if (!emitted.has(id)) {
+        const catRow = catalog.checks.find((c) => c.id === id);
+        const { layerId, layerName } = layerOf(id);
+        yield { type: "check_start", layerId, layerName, checkId: id, checkName: catRow?.name ?? id, mcpKind: null, mcpUrl: null, timestamp: Date.now() };
+      }
     }
     try {
       for (const r of await probe.run({ url, fetchAs, ctx })) {
-        if (emitted.has(r.id)) continue; // late probes never override detectors
+        const isLateOverride = emitted.has(r.id);
+        // late refinement probes REPLACE the earlier result (never emit a second frame)
+        if (isLateOverride) {
+          const i = results.findIndex((x) => x.id === r.id);
+          if (i >= 0 && r.status !== "na") results[i] = r;
+          continue;
+        }
         emitted.add(r.id);
         results.push(r);
         const catRow = catalog.checks.find((c) => c.id === r.id);

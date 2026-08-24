@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, schema } from "@/db/index";
 import { eq, desc } from "drizzle-orm";
 import { latestReport } from "@/lib/jobs";
+import { normalizeTarget } from "@agentic-scanner/core";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,13 @@ export async function GET(req: Request) {
   if (!raw) {
     return NextResponse.json({ type: "about:blank", title: "Missing url", status: 400, code: "invalid_url" }, { status: 400 });
   }
-  const report = await latestReport(raw);
+  let normalized: string;
+  try {
+    normalized = normalizeTarget(raw).toString();
+  } catch {
+    return NextResponse.json({ type: "about:blank", title: "Invalid url", status: 400, code: "invalid_url" }, { status: 400 });
+  }
+  const report = await latestReport(normalized);
   if (!report) {
     return NextResponse.json({ type: "about:blank", title: "No report yet", status: 404, code: "report_not_found" }, { status: 404 });
   }

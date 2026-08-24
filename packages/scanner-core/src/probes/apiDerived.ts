@@ -126,7 +126,7 @@ export class AsyncJobPatternProbe implements Probe {
     const s = specText(ctx);
     const has202 = /"?202"?\s*:|\b202\b/.test(s);
     const pollVocab = /job|operation[-_ ]?(id|status)|polling|try\s+again\s+later|x-status/i.test(s);
-    const pollEndpoint = /(operations|jobs|tasks)\/\{|operation[-_ ]?id|"Retry-After"|status[-_ ]?url/i.test(s);
+    const pollEndpoint = /"(Retry-After)"\s*:|(operations|jobs|tasks)\/\{|status[-_ ]?url|operation[-_ ]?location/i.test(s);
     if (has202 && pollEndpoint) {
       return [result(this.ids[0], "pass", 2, 2, "Async job pattern documented (202 + status endpoint).")];
     }

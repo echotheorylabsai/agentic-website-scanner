@@ -75,8 +75,8 @@ export function startScan(rawTarget: string, source: "web" | "cli" | "api" = "ap
 
 async function executeWithRetry(job: RunningJob, target: string, source: string, attempt = 0): Promise<void> {
   try {
-    await persistQueuedScan(job, source as "web");
-    await executeScan(job, target);
+    if (attempt === 0) await persistQueuedScan(job, source as "web"); // never re-insert on retry
+    await executeScan(job, target, attempt);
   } catch (err) {
     if (attempt < 2) {
       push(job, { type: "discovery_phase", step: `Retrying after transient failure (${attempt + 1}/2)` });
@@ -109,7 +109,7 @@ async function persistQueuedScan(job: RunningJob, source: "web" | "cli" | "api")
   void job;
 }
 
-async function executeScan(job: RunningJob, target: string) {
+async function executeScan(job: RunningJob, target: string, _attempt = 0) {
   let scanRow: { id: string } | undefined;
   const rows = await db.select({ id: schema.scans.id }).from(schema.scans)
     .where(and(eq(schema.scans.target, target), eq(schema.scans.status, "running")))
@@ -152,8 +152,9 @@ async function executeScan(job: RunningJob, target: string) {
     const raw = { ...out.raw, label: out.raw.label ?? lookupLabel(out.raw.score) };
     const payload = serializeReport(
       raw, out.gated,
-      { target: target, displayTarget: job.displayTarget, reportUrl: `/scan/${job.displayTarget}`, scannedAt },
+      { target: target, displayTarget: job.displayTarget, reportUrl: `https://agentic.local/scan/${job.displayTarget}`, scannedAt },
       names,
+      new Map(vendoredCatalog.checks.filter((c) => c.recommendation).map((c) => [c.id, c.recommendation as string])),
     );
 
     const inserted = await db.insert(schema.reports).values({

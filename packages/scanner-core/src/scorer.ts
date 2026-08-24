@@ -26,7 +26,8 @@ export interface RawScore {
   label: string | null;
 }
 
-const trunc0_1 = (n: number): number => Math.trunc(n * 10) / 10;
+// components round to 0.1 (NOT truncate — eve.dev reprojection 70 vs published 71 disproved truncation)
+const trunc0_1 = (n: number): number => Math.round(n * 10) / 10;
 
 export const GRADE_BANDS: Array<[number, string]> = [
   [95, "A+"], [86, "A"], [70, "B"], [48, "C"], [28, "D"], [-Infinity, "F"],
@@ -125,10 +126,9 @@ function issueOrderKey(c: ScoredCheck, gains: Map<string, number>): [number, num
 /** Label bands (approximate, from observed reports) — refined by harness snapshots. */
 const DEFAULT_LABELS: Array<[number, string]> = [
   [95, "Exceptional agent experience"],
-  [86, "Strong technical baseline"],
-  [70, "Solid foundation with gaps"],
-  [48, "Emerging agent readiness"],
-  [28, "Early-stage agent accessibility"],
+  [80, "Strong technical baseline"],      // vercel.com 85 → this band (observed)
+  [48, "Important blockers remain"],       // eve 55, example.org 51 (observed)
+  [28, "Agents are likely to struggle"],   // meta.ai 32 (observed)
   [-Infinity, "Agents are likely to struggle"],
 ];
 
@@ -143,6 +143,7 @@ export function serializeReport(
   checks: ScoredCheck[],
   meta: SerializeMeta,
   catalogNames?: Map<string, string>,
+  catalogRecs?: Map<string, string>,
 ): {
   target: string; display_target: string; report_url: string;
   score: number; score_label: string | null; scanned_at: string;
@@ -155,7 +156,11 @@ export function serializeReport(
   issues: Array<{ id: string; name: string; tier: string; result: "failed" | "partial"; details: string | null; recommendation: string | null }>;
 } {
   const { issues } = estGains(checks);
-  const named = issues.map((i) => ({ ...i, name: catalogNames?.get(i.id) ?? i.name }));
+  const named = issues.map((i) => ({
+    ...i,
+    name: catalogNames?.get(i.id) ?? i.name,
+    recommendation: i.recommendation ?? catalogRecs?.get(i.id) ?? null,
+  }));
   return {
     target: meta.target,
     display_target: meta.displayTarget,
@@ -167,7 +172,7 @@ export function serializeReport(
     score_breakdown: {
       essential: { earned: round1(raw.essentialRaw), available: 80, passing: raw.passing.essential, total: raw.totals.essential },
       recommended: { earned: round1(raw.recommendedRaw), available: 20, passing: raw.passing.recommended, total: raw.totals.recommended },
-      bonus: { points: Math.round(round1(raw.bonusRaw)), positive_signals: raw.bonusSignals },
+      bonus: { points: round1(raw.bonusRaw), positive_signals: raw.bonusSignals },
     },
     issues: named,
   };
