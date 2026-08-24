@@ -1,0 +1,80 @@
+▲ / Is Agentic  vercel.com
+
+  ███████████████████████████████░░░░░    86 / 100
+                                          Strong technical baseline
+                                          2 failed · 6 partial
+
+SCORE BREAKDOWN
+  Essential       63.5 / 80    8 / 11 passed
+  Recommended     17.9 / 20    17 / 22 passed
+  Bonus                  +5    38 positive signals
+
+FAILURES (2)
+
+1. FAIL · ESSENTIAL  Agent-friendly 404s
+   Evidence  Nonexistent paths return HTTP 200 with the app shell (soft-404). Agents
+             probing for resources conclude every path exists. Return a real HTTP 404
+             status for unknown paths.
+   Fix       Return a real HTTP 404 (or 410) status for nonexistent paths - never a 200
+             with your app shell, which makes agents believe every path exists. For full
+             credit, give the 404 response a short markdown body pointing agents at your
+             sitemap, llms.txt, or docs index. Verify with `curl -s -o /dev/null -w
+             "%{http_code}" https://yourdomain.com/some-path-that-does-not-exist` - it
+             must print 404.
+
+2. FAIL · RECOMMENDED  Rate limit response headers
+   Evidence  No REST rate-limit headers found on probed endpoints
+   Fix       Return standard rate-limit headers on your API responses (the RFC RateLimit
+             headers, plus Retry-After on a 429) so agents can self-throttle in real
+             time, and document the conventions alongside your API.
+
+PARTIAL (6)
+
+3. PARTIAL · ESSENTIAL  Content without JavaScript
+   Evidence  Only 976 chars of text content, no H1 tag - agents see limited content
+   Fix       Server-side render your homepage so AI crawlers see meaningful content
+             without JavaScript. Ensure an H1 and 500+ chars of text in raw HTML.
+
+4. PARTIAL · ESSENTIAL  Scoped permissions
+   Evidence  OpenAPI declares security schemes but no named OAuth scopes - agents get
+             all-or-nothing access. Declare per-scope grants (e.g. read:*, write:*) in
+             the spec.
+   Fix       Declare scoped API permissions where machines can read them: named OAuth
+             scopes in your OpenAPI security schemes, or scopes_supported in RFC 9728
+             protected-resource metadata. Prose descriptions of roles help humans, but
+             agents need the machine-readable declaration to request least-privilege
+             access.
+
+5. PARTIAL · RECOMMENDED  Agent onboarding friction
+   Evidence  Onboarding signals described but not verified live: free tier available,
+             self-serve key generation, sandbox/test environment
+   Fix       Offer a free tier or trial, self-serve API key generation, and a sandbox
+             environment. Agents can't fill out 'contact sales' forms.
+
+6. PARTIAL · RECOMMENDED  Agent instruction / when-to-use
+   Evidence  Agent instruction file at /agent.txt but no explicit when-to-use guidance
+   Fix       Tell agents when to reach for you: add a 'when to use this' section to your
+             llms.txt (or a dedicated agent-instructions file) that names your best-fit
+             use cases and how an agent should call you. Be specific about the jobs you
+             are right for - generic marketing copy does not read as guidance.
+
+7. PARTIAL · RECOMMENDED  Developer resource discoverability
+   Evidence  Agent found developer resources by name including API docs (3 relevant
+             pages)
+   Fix       Make your developer resources (API docs, OpenAPI spec, auth docs, webhooks,
+             MCP server) discoverable by name. Publish them at predictable URLs, list
+             them in llms.txt, and include your product name in page titles and headings
+             so search engines surface them for name-based queries.
+
+8. PARTIAL · RECOMMENDED  MCP server / manifest
+   Evidence  Live MCP server at https://mcp.vercel.com requires authentication (OAuth
+             challenge at initialize) - properly scoped. Upgrade to public tool listing
+             for full 6/6.
+   Fix       Build an MCP (Model Context Protocol) server exposing your API as tools.
+             Use Streamable HTTP transport for full score. This lets Claude, ChatGPT,
+             and other AI agents call your product natively.
+
+REPORT
+  URL      https://is-agentic.com/scan/vercel.com
+  Scanned  2026-08-24T18:49:26.810Z
+  Checks   33 eligible

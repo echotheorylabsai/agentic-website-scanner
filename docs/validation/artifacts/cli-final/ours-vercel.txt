@@ -1,0 +1,50 @@
+▲ / Is Agentic  vercel.com
+
+  █████████████████████████████████░░░    92 / 100
+                                          Strong technical baseline
+                                          3 failed · 1 partial
+
+SCORE BREAKDOWN
+  Essential       72.7 / 80    10 / 11 passed
+  Recommended     17.7 / 20    16 / 19 passed
+  Bonus                  +2    9 positive signals
+
+FAILURES (3)
+
+1. FAIL · ESSENTIAL  Agent-friendly 404s
+   Evidence  Nonexistent paths return HTTP 200 with the app shell (soft-404). Agents
+             probing for resources conclude every path exists. Return a real HTTP 404
+             status for unknown paths.
+   Fix       Return a real HTTP 404 (or 410) status for nonexistent paths - never a 200
+             with your app shell, which makes agents believe every path exists. For full
+             credit, give the 404 response a short markdown body pointing agents at your
+             sitemap, llms.txt, or docs index. Verify with `curl -s -o /dev/null -w
+             "%{http_code}" https://yourdomain.com/some-path-that-does-not-exist` - it
+             must print 404.
+
+2. FAIL · RECOMMENDED  Agent instruction / when-to-use
+   Evidence  No agent instruction file with when-to-use guidance found
+   Fix       Tell agents when to reach for you: add a 'when to use this' section to your
+             llms.txt (or a dedicated agent-instructions file) that names your best-fit
+             use cases and how an agent should call you. Be specific about the jobs you
+             are right for - generic marketing copy does not read as guidance.
+
+3. FAIL · RECOMMENDED  Rate limit response headers
+   Evidence  No REST rate-limit headers found on probed endpoints
+   Fix       Return standard rate-limit headers on your API responses (the RFC RateLimit
+             headers, plus Retry-After on a 429) so agents can self-throttle in real
+             time, and document the conventions alongside your API.
+
+PARTIAL (1)
+
+4. PARTIAL · RECOMMENDED  MCP server / manifest
+   Evidence  MCP server live at /mcp but initialize requires authentication (HTTP 307
+             redirect).
+   Fix       Build an MCP (Model Context Protocol) server exposing your API as tools.
+             Use Streamable HTTP transport for full score. This lets Claude, ChatGPT,
+             and other AI agents call your product natively.
+
+REPORT
+  URL      https://agentic.local/scan/vercel.com
+  Scanned  2026-08-24T19:56:04.795Z
+  Checks   30 eligible

@@ -1,0 +1,93 @@
+▲ / Is Agentic  example.org
+
+  ██████████████████░░░░░░░░░░░░░░░░░░    51 / 100
+                                          Important blockers remain
+                                          8 failed · 2 partial
+
+SCORE BREAKDOWN
+  Essential       46.7 / 80    3 / 6 passed
+  Recommended      3.8 / 20    1 / 8 passed
+  Bonus                +0.5    2 positive signals
+
+FAILURES (8)
+
+1. FAIL · ESSENTIAL  Content without JavaScript
+   Evidence  Very little text content (139 chars) - likely JS-rendered, invisible to AI
+             crawlers
+   Fix       Server-side render your homepage so AI crawlers see meaningful content
+             without JavaScript. Ensure an H1 and 500+ chars of text in raw HTML.
+
+2. FAIL · ESSENTIAL  Markdown content negotiation (acceptmarkdown.com)
+   Evidence  Not acceptmarkdown.com compliant: Accept: text/markdown returned text/html;
+             Vary header missing Accept (got "none")
+   Fix       On the responses that serve text/markdown via Accept negotiation, add
+             Accept to the Vary header (Vary: Accept, Accept-Encoding). Without it, CDNs
+             can serve the cached HTML variant to an agent asking for markdown (or vice
+             versa), depending on which variant landed in cache first.
+
+3. FAIL · RECOMMENDED  Brand name discoverability
+   Evidence  "Example Domain" search returned 8 results but domain did not appear -
+             brand may be too generic or not indexed
+   Fix       Make sure a clean search for your brand name returns your own domain in the
+             top results. If it does not, your brand may be too generic, conflict with a
+             more established term, or not yet indexed. Strengthen brand-name search by
+             claiming consistent NAP across listings, earning press mentions that link
+             to the canonical domain, and avoiding redirect chains that mask the apex
+             domain in search results.
+
+4. FAIL · RECOMMENDED  JSON-LD structured data
+   Evidence  No JSON-LD structured data found on homepage
+   Fix       Add JSON-LD structured data to your homepage using the identity type that
+             matches your site - SoftwareApplication for products, Organization or
+             LocalBusiness for companies, Person for personal sites, Article for blogs -
+             with name, description, url, and type-appropriate fields (offers, sameAs,
+             author) so AI can parse your identity programmatically.
+
+5. FAIL · RECOMMENDED  Agent instruction / when-to-use
+   Evidence  No agent instruction file with when-to-use guidance found
+   Fix       Tell agents when to reach for you: add a 'when to use this' section to your
+             llms.txt (or a dedicated agent-instructions file) that names your best-fit
+             use cases and how an agent should call you. Be specific about the jobs you
+             are right for - generic marketing copy does not read as guidance.
+
+6. FAIL · RECOMMENDED  Sitemap exists
+   Evidence  No sitemap found
+   Fix       Add a valid XML sitemap at /sitemap.xml listing all indexable URLs. Include
+             lastmod dates and keep it under 50MB.
+
+7. FAIL · RECOMMENDED  Organization schema completeness
+   Evidence  No JSON-LD found - Organization schema missing
+   Fix       Add Organization JSON-LD that includes both contactPoint (with email/phone
+             and contactType) and address (PostalAddress). This lets AI verify your
+             business legitimacy and answer contact queries.
+
+8. FAIL · RECOMMENDED  Trust anchor pages
+   Evidence  No trust anchor pages found with sufficient content (About, Contact,
+             Privacy)
+   Fix       Publish real /about, /contact, and /privacy pages with at least 500
+             characters of content each. These are the pages AI agents check to verify
+             your business is legitimate before recommending you.
+
+PARTIAL (2)
+
+9. PARTIAL · ESSENTIAL  Agent-friendly 404s
+   Evidence  Nonexistent paths return a real HTTP 404. For full credit, include a short
+             markdown body (site map links, where to look next) so agents can recover.
+   Fix       Return a real HTTP 404 (or 410) status for nonexistent paths - never a 200
+             with your app shell, which makes agents believe every path exists. For full
+             credit, give the 404 response a short markdown body pointing agents at your
+             sitemap, llms.txt, or docs index. Verify with `curl -s -o /dev/null -w
+             "%{http_code}" https://yourdomain.com/some-path-that-does-not-exist` - it
+             must print 404.
+
+10. PARTIAL · RECOMMENDED  Metadata completeness
+   Evidence  Only 1/4 metadata signals present - missing: canonical URL, og:image,
+             og:type
+   Fix       Add all four signals to your homepage: <link rel="canonical">, <html
+             lang="...">, <meta property="og:image">, and <meta property="og:type">.
+             Agents use these for entity resolution and attribution.
+
+REPORT
+  URL      https://is-agentic.com/scan/example.org
+  Scanned  2026-08-24T19:20:56.410Z
+  Checks   14 eligible

@@ -171,3 +171,31 @@ Business logic for every deterministic check is now either **byte-matched to obs
 - rest-sdk-packages (bonus-only, PyPI attribution difference)
 
 **Recommendation text: 50/50 byte-identical. Evidence text: factually true on all checks (live-verified).**
+
+---
+
+# Addendum 4: CLI Channel Comparison (independent, no LLM assistance)
+
+**Method:** official `npx is-agentic` binary run against both backends (`IS_AGENTIC_API_ORIGIN` switch), all 4 domains; parsed score/breakdown/issue blocks; byte-level Evidence + Fix comparison on shared issues. Artifacts: `artifacts/cli-final/`.
+
+## Results
+
+| Domain | Official | Ours | Shared issues | Fix byte-equal | Evidence byte-equal | False positives |
+|---|---|---|---|---|---|---|
+| vercel.com | 86 | 92 | 4 | **4/4** | 2/4 | **0** |
+| eve.dev | 71 | 66 | 8 | **8/8** | 3/8 | 2 (documented oauth/scoped residuals) |
+| meta.ai | 32 | 24 | 19 | **18/19** | 4/19 | 1 (documented oauth residual) |
+| example.org | 51 | 35 | 9 | **9/9** | 6/9 | 11 — see below |
+
+- **Fix text: 39/40 shared issues byte-identical (98%).**
+- **Evidence text:** differences are documented phrasing/depth (Ora embeds deeper measurements); semantic equivalence previously verified row-by-row.
+- **Zero evidence-text fabrications** (live fact-checked by the 4-agent audit).
+
+## The example.org "11 false positives" — explained
+
+All 11 are API/MCP-family checks that **Ora's LLM relevance pass excluded** from its essentials map (verified: absent from their per-domain checks; their eligible pool = 14, their issues list = 1). Our deterministic engine scored them factually-true fails (example.org genuinely has no OpenAPI, OAuth, MCP, or CLI). This is the documented **product-level relevance divergence**: Ora's LLM decides per-domain which checks apply; we score deterministically. Out of scope by design.
+
+## Remaining true residuals (all documented)
+- eve/meta OAuth + scoped-permissions: Ora finds auth signals we cannot observe
+- content-no-js on vercel: UA-variant serving (their agent-UA fetch sees markdown)
+- Brand-name discoverability / Agent onboarding friction / Developer resource discoverability: LLM-judged checks, out of scope
