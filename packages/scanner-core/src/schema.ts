@@ -109,10 +109,25 @@ export const scanEvent = z.union([
 export type ScanEvent = z.infer<typeof scanEvent>;
 export type ScanEventName = ScanEvent["event"];
 
-/** Parse an SSE wire frame ("data: {...}") into a typed ScanEvent. */
+const KNOWN_EVENT_TYPES = new Set([
+  "kind_detecting", "kind_detected", "scan_init", "discovery_phase",
+  "layer_start", "check_start", "check_complete", "layer_complete",
+  "relevance_assessed", "summary_ready", "scan_complete", "scan_archived", "error",
+]);
+
+/** Parse an SSE wire frame ("data: {...}") into a typed ScanEvent.
+ * Known event types are validated STRICTLY against their shape;
+ * unknown upstream types pass through the permissive guard. */
 export function parseSseData(line: string): ScanEvent {
   const payload = line.startsWith("data:") ? line.slice(5).trim() : line;
-  return scanEvent.parse(JSON.parse(payload)) as ScanEvent;
+  const raw = JSON.parse(payload);
+  if (raw && typeof raw === "object" && typeof raw.type === "string" && KNOWN_EVENT_TYPES.has(raw.type)) {
+    const strict = scanEvent.parse(raw) as ScanEvent;
+    if ((strict as { type: string }).type === raw.type) return strict;
+    // matched the wrong (permissive) member ⇒ shape violation
+    throw new Error(`Malformed frame for known event type ${raw.type}`);
+  }
+  return scanEvent.parse(raw) as ScanEvent;
 }
 
 export function eventName(e: ScanEvent): string { return e.type; }
