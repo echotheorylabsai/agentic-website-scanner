@@ -31,6 +31,8 @@ export async function GET(req: Request) {
     .where(eq(schema.checks.scan_id, report.scan_id))
     .orderBy(desc(schema.checks.fraction));
 
+  const { vendoredCatalog } = await import("@agentic-scanner/core");
+  const names = new Map(vendoredCatalog.checks.map((c) => [c.id, c.name] as const));
   return NextResponse.json({
     report: report.payload,
     grade: report.grade,
@@ -39,6 +41,7 @@ export async function GET(req: Request) {
     scanned_at: report.scanned_at,
     roster: checks.map((c) => ({
       check_id: c.check_id,
+      name: names.get(c.check_id) ?? c.check_id,
       essentials_tier: c.essentials_tier,
       essentials_bonus_only: c.essentials_bonus_only,
       bonus: c.bonus,

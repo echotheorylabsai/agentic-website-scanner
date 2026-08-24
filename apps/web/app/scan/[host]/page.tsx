@@ -22,7 +22,7 @@ interface FullReport {
   prev_scan_id: string | null;
   scanned_at: string;
   roster: Array<{
-    check_id: string; essentials_tier: string; essentials_bonus_only: boolean; bonus: boolean;
+    check_id: string; name?: string; essentials_tier: string; essentials_bonus_only: boolean; bonus: boolean;
     status: string; score: number | null; max_score: number; fraction: number | null;
     details: string | null; recommendation: string | null; na_reason: string | null; eligible: boolean;
   }>;
@@ -130,22 +130,35 @@ export default function ScanPage({ params }: { params: Promise<{ host: string }>
             ))}
           </div>
 
-          <details className="card">
-            <summary style={{ cursor: "pointer", fontWeight: 600 }}>Full check roster ({report.roster.length})</summary>
-            <table className="roster">
-              <thead><tr><th>Check</th><th>Tier</th><th>Status</th><th>Score</th></tr></thead>
-              <tbody>
-                {report.roster.map((c) => (
-                  <tr key={c.check_id}>
-                    <td>{c.check_id}{c.bonus || c.essentials_bonus_only ? " ★" : ""}</td>
-                    <td>{c.na_reason ?? c.essentials_tier}</td>
-                    <td className={`status-${c.status}`}>{c.status}</td>
-                    <td>{c.score ?? "—"}/{c.max_score}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </details>
+          {([
+            ["Essential", report.roster.filter((c) => c.essentials_tier === "required" && !c.essentials_bonus_only), `${report.report.score_breakdown.essential.earned} / ${report.report.score_breakdown.essential.available} points`],
+            ["Recommended", report.roster.filter((c) => c.essentials_tier === "recommended" && !c.essentials_bonus_only), `${report.report.score_breakdown.recommended.earned} / ${report.report.score_breakdown.recommended.available} points`],
+            ["Bonus signals", report.roster.filter((c) => c.essentials_bonus_only || (c.bonus && c.essentials_tier !== "required")), `${report.report.score_breakdown.bonus.positive_signals} positive · +${report.report.score_breakdown.bonus.points} points`],
+          ] as const).map(([tierName, checks, pointsLabel]) => (
+            <details className="card" key={tierName} open={tierName !== "Bonus signals"}>
+              <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+                {tierName}{" "}
+                <span style={{ color: "var(--muted)", fontWeight: 400 }}>
+                  {checks.filter((c) => c.status === "pass").length} of {checks.length} passed · {pointsLabel}
+                </span>
+              </summary>
+              {checks.map((c) => (
+                <div key={c.check_id} style={{ borderBottom: "1px solid var(--border)", padding: "14px 0" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <strong>{c.name || c.check_id}{c.essentials_bonus_only || c.bonus ? " ★" : ""}</strong>
+                    <span className={`status-${c.status}`}>{c.status === "na" ? "N/A" : c.status.charAt(0).toUpperCase() + c.status.slice(1)}</span>
+                  </div>
+                  {c.details && <p style={{ color: "var(--muted)", margin: "6px 0" }}>{c.details}</p>}
+                  {c.recommendation && (
+                    <div style={{ borderLeft: "3px solid var(--accent)", paddingLeft: 12, margin: "10px 0", background: "rgba(79,140,255,.05)", borderRadius: "0 8px 8px 0" }}>
+                      <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: 1, marginTop: 8 }}>RECOMMENDATION</div>
+                      <p style={{ margin: "4px 0 10px", fontSize: 13.5 }}>{c.recommendation}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </details>
+          ))}
         </>
       )}
     </main>
