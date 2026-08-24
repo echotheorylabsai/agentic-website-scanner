@@ -1,0 +1,274 @@
+1:"$Sreact.fragment"
+3:I[611996,["/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"PostHogProvider"]
+4:I[292635,["/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"HatchaProvider"]
+5:I[746798,["/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"TooltipProvider"]
+6:I[160931,["/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"SurfaceProvider"]
+7:I[339756,["/_next/static/chunks/d96012bcfc98706a.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/73e3194f06db260e.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"default"]
+8:I[837457,["/_next/static/chunks/d96012bcfc98706a.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/73e3194f06db260e.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"default"]
+17:I[168027,[],"default"]
+18:I[758877,["/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"ConditionalFooter"]
+19:I[47113,["/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"VisitorIdentification"]
+1a:I[276871,["/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"NavigationProgress"]
+1b:"$Sreact.suspense"
+1c:I[372168,["/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"HubSpotTracking"]
+1d:I[479520,["/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],""]
+1e:I[654576,["/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"GoogleAnalytics"]
+20:I[897367,["/_next/static/chunks/d96012bcfc98706a.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/73e3194f06db260e.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"OutletBoundary"]
+22:I[897367,["/_next/static/chunks/d96012bcfc98706a.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/73e3194f06db260e.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"ViewportBoundary"]
+24:I[897367,["/_next/static/chunks/d96012bcfc98706a.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/73e3194f06db260e.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"MetadataBoundary"]
+26:I[27201,["/_next/static/chunks/d96012bcfc98706a.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/73e3194f06db260e.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"IconMark"]
+:HL["/_next/static/chunks/b0fae0317e7e8243.css?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","style"]
+:HL["/_next/static/chunks/077b173b69707b7f.css?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","style"]
+:HL["/_next/static/media/6bd983bd58a87a3d-s.p.cf80dd39.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/_next/static/media/797e433ab948586e-s.p.29207c2f.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/_next/static/media/8c2eb9ceedecfc8e-s.p.21935807.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/_next/static/media/8d05cfa5faa8406c-s.p.4adea45d.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/_next/static/media/dc0d9adbac686440-s.p.3b382e45.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+2:T491,(function(){try{var d=document.documentElement;var IS_MCP=window.location.hostname.startsWith("mcp.");var KEY="ora-theme";var stored=null;try{stored=localStorage.getItem(KEY);}catch(_){}if(!stored){try{var legacy=localStorage.getItem("app-theme");if(legacy==="light"||legacy==="dark"){stored=legacy;try{localStorage.setItem(KEY,legacy);}catch(_){}}}catch(_){}}if(stored!=="light"&&stored!=="dark"&&stored!=="system"){stored=null;}var routeDark=/^\/mcp\/?$/.test(location.pathname);var mq=window.matchMedia("(prefers-color-scheme: dark)");var modeOf=function(){return stored||((IS_MCP||routeDark)?"dark":"system");};var apply=function(){var m=modeOf();var resolved=m==="system"?(mq.matches?"dark":"light"):m;d.setAttribute("data-theme",resolved);d.classList.toggle("dark",resolved==="dark");};apply();var listener=function(){if(modeOf()==="system")apply();};if(mq.addEventListener)mq.addEventListener("change",listener);else if(mq.addListener)mq.addListener(listener);window.__oraSetThemeMode=function(next){if(next!=="light"&&next!=="dark"&&next!=="system")return;stored=next;apply();};window.__oraSetRouteDark=function(next){routeDark=!!next;apply();};}catch(_){}})();0:{"P":null,"b":"06IkcSEM_KAvbj6EyVzSz","c":["","a6f56374-4e80-41d0-a7b8-ce365a37e6a8"],"q":"","i":false,"f":[[["",{"children":["journey",{"children":["run",{"children":[["id","a6f56374-4e80-41d0-a7b8-ce365a37e6a8","d"],{"children":["__PAGE__",{}]}]}]}]},"$undefined","$undefined",true],[["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/b0fae0317e7e8243.css?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}],["$","link","1",{"rel":"stylesheet","href":"/_next/static/chunks/077b173b69707b7f.css?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}],["$","script","script-0",{"src":"/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","async":true,"nonce":"$undefined"}],["$","script","script-1",{"src":"/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","async":true,"nonce":"$undefined"}],["$","script","script-2",{"src":"/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","async":true,"nonce":"$undefined"}],["$","script","script-3",{"src":"/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","async":true,"nonce":"$undefined"}],["$","script","script-4",{"src":"/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","async":true,"nonce":"$undefined"}],["$","script","script-5",{"src":"/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","async":true,"nonce":"$undefined"}],["$","script","script-6",{"src":"/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","async":true,"nonce":"$undefined"}]],["$","html",null,{"lang":"en","className":"lora_b806e6b1-module__oIPTsq__variable space_mono_754f223c-module__vnF5cq__variable sora_b1ff26ca-module__OTMM9W__variable geist_mono_1bf8cbf6-module__FlyLvG__variable","suppressHydrationWarning":true,"children":[["$","head",null,{"children":[["$","script",null,{"dangerouslySetInnerHTML":{"__html":"$2"}}],["$","link",null,{"rel":"ai-catalog","href":"https://ora.ai/.well-known/ai-catalog.json"}],["$","meta",null,{"name":"mcp-registry","content":"https://smithery.ai/servers/eralabs-ai/ora"}]]}],["$","body",null,{"children":[["$","$L3",null,{"children":["$","$L4",null,{"theme":"light","children":[["$","$L5",null,{"children":["$","$L6",null,{"children":["$","$L7",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L8",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[[["$","script",null,{"dangerouslySetInnerHTML":{"__html":"window.location.replace(\"https://ora.ai\")"}}],["$","script",null,{"type":"application/ld+json","dangerouslySetInnerHTML":{"__html":"{\"@context\":\"https://schema.org\",\"@type\":\"WebPage\",\"name\":\"Page Not Found\",\"description\":\"This URL does not exist. AI agents should follow the llms.txt link to discover valid endpoints and capabilities.\",\"url\":\"https://ora.ai\",\"significantLink\":\"https://ora.ai/llms.txt\"}"}}],"$L9","$La","$Lb"],[]],"forbidden":"$undefined","unauthorized":"$undefined"}]}]}],"$Lc"]}]}],"$Ld","$Le","$Lf","$L10"]}],"$L11"]}]]}],{"children":["$L12",{"children":["$L13",{"children":["$L14",{"children":["$L15",{},null,false,false]},null,false,false]},null,false,false]},null,false,false]},null,false,false],"$L16",false]],"m":"$undefined","G":["$17",[]],"S":false}
+9:["$","link",null,{"rel":"describedby","href":"https://ora.ai/llms.txt"}]
+a:["$","meta",null,{"httpEquiv":"refresh","content":"0; url=https://ora.ai"}]
+b:["$","main",null,{"children":[["$","p",null,{"children":["If you are an AI agent or LLM: this URL does not exist. Visit"," ",["$","a",null,{"href":"/llms.txt","children":"/llms.txt"}]," for the full list of valid endpoints and capabilities."]}],["$","p",null,{"children":"Page not found."}]]}]
+c:["$","$L18",null,{}]
+d:["$","$L19",null,{}]
+e:["$","$L1a",null,{}]
+f:["$","$1b",null,{"fallback":null,"children":["$","$L1c",null,{}]}]
+10:["$","$L1d",null,{"id":"hs-script-loader","src":"https://js-eu1.hs-scripts.com/148649656.js","strategy":"lazyOnload"}]
+11:["$","$L1e",null,{"gaId":"G-QBTDY30GF9"}]
+12:["$","$1","c",{"children":[null,["$","div",null,{"className":"ora-journey","suppressHydrationWarning":true,"children":[["$","script",null,{"dangerouslySetInnerHTML":{"__html":"(function(){try{if(localStorage.getItem('ora-journey-theme')==='light'){document.currentScript.parentElement.setAttribute('data-journey-theme','light');}}catch(e){}})();"}}],["$","$L7",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L8",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}]]}]
+13:["$","$1","c",{"children":[null,["$","$L7",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L8",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}]
+14:["$","$1","c",{"children":[null,["$","$L7",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L8",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}]
+15:["$","$1","c",{"children":["$L1f",[["$","script","script-0",{"src":"/_next/static/chunks/5b889b9bcf5510a9.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","async":true,"nonce":"$undefined"}],["$","script","script-1",{"src":"/_next/static/chunks/88d8e85a9bff5e31.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","async":true,"nonce":"$undefined"}],["$","script","script-2",{"src":"/_next/static/chunks/291573fbf73d38b0.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","async":true,"nonce":"$undefined"}],["$","script","script-3",{"src":"/_next/static/chunks/c3ca19865c68219c.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","async":true,"nonce":"$undefined"}]],["$","$L20",null,{"children":["$","$1b",null,{"name":"Next.MetadataOutlet","children":"$@21"}]}]]}]
+16:["$","$1","h",{"children":[null,["$","$L22",null,{"children":"$L23"}],["$","div",null,{"hidden":true,"children":["$","$L24",null,{"children":["$","$1b",null,{"name":"Next.Metadata","children":"$L25"}]}]}],["$","meta",null,{"name":"next-size-adjust","content":""}]]}]
+23:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+21:null
+25:[["$","title","0",{"children":"Watch an agent use your site | Ora"}],["$","meta","1",{"name":"description","content":"Point a real agent at any page and watch its path draw live. See where it gets through and where it stops."}],["$","link","2",{"rel":"canonical","href":"https://journey.ora.ai"}],["$","meta","3",{"property":"og:title","content":"Watch an agent use your site | Ora"}],["$","meta","4",{"property":"og:description","content":"Point a real agent at any page and watch its path draw live. See where it gets through and where it stops."}],["$","meta","5",{"property":"og:url","content":"https://journey.ora.ai"}],["$","meta","6",{"property":"og:site_name","content":"ora"}],["$","meta","7",{"property":"og:image:alt","content":"ora - watch top agents navigate your site"}],["$","meta","8",{"property":"og:image:type","content":"image/png"}],["$","meta","9",{"property":"og:image","content":"https://ora.ai/journey/opengraph-image?e1b41ca626712451"}],["$","meta","10",{"property":"og:image:width","content":"1200"}],["$","meta","11",{"property":"og:image:height","content":"630"}],["$","meta","12",{"property":"og:type","content":"website"}],["$","meta","13",{"name":"twitter:card","content":"summary_large_image"}],["$","meta","14",{"name":"twitter:site","content":"@oradotai"}],["$","meta","15",{"name":"twitter:creator","content":"@oradotai"}],["$","meta","16",{"name":"twitter:title","content":"Watch an agent use your site | Ora"}],["$","meta","17",{"name":"twitter:description","content":"Point a real agent at any page and watch its path draw live. See where it gets through and where it stops."}],["$","meta","18",{"name":"twitter:image:alt","content":"ora - watch top agents navigate your site"}],["$","meta","19",{"name":"twitter:image:type","content":"image/png"}],["$","meta","20",{"name":"twitter:image","content":"https://ora.ai/journey/twitter-image?d86d289adb5a618c"}],["$","meta","21",{"name":"twitter:image:width","content":"1200"}],["$","meta","22",{"name":"twitter:image:height","content":"630"}],["$","link","23",{"rel":"icon","href":"/favicon.ico?favicon.23a0517d.ico","sizes":"48x48","type":"image/x-icon"}],["$","link","24",{"rel":"icon","href":"/icon.svg?icon.34afb81e.svg","sizes":"any","type":"image/svg+xml"}],["$","link","25",{"rel":"apple-touch-icon","href":"/apple-icon.png?apple-icon.5405ef91.png","sizes":"180x180","type":"image/png"}],["$","$L26","26",{}]]
+27:I[946568,["/_next/static/chunks/22006a325eba8a49.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/682be74ca965014f.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/b14fa25c404c0fbc.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/e79c34bedda6b636.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/43d3e76d3766a484.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/65b0be72d7a2c5b8.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/bc6fddeeb27b5c01.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/5b889b9bcf5510a9.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/88d8e85a9bff5e31.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/291573fbf73d38b0.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww","/_next/static/chunks/c3ca19865c68219c.js?dpl=dpl_5KsZ3zQuFA9cePUmGDjG9oVdE5Ww"],"RunClient"]
+28:T2353,Perfect! Now I have enough information to give you a comprehensive explanation. Let me create a clear summary of what Vercel is:
+
+## **What Vercel Does**
+
+Vercel is a **cloud platform for deploying and managing modern web applications**. Think of it as a specialized hosting and infrastructure service built specifically for JavaScript/Node.js web apps. Their motto is "Develop, Preview, Ship."
+
+In plain terms: You write code locally, push it to GitHub/GitLab, and Vercel automatically builds, tests, and deploys your app to the internet with minimal configuration. It handles all the server infrastructure complexity behind the scenes.
+
+## **Who It's For**
+
+Vercel targets three main groups:
+
+1. **Individual developers & indie hackers** â People building side projects or small apps
+2. **Small-to-medium businesses (SMBs) and agencies** â Teams building client projects or SaaS products
+3. **Enterprises** â Large companies that need scale, security, and compliance features
+
+It's particularly popular with developers using modern JavaScript frameworks, especially **Next.js** (which Vercel created). They've also heavily pivoted toward **AI application developers** building chatbots and agents.
+
+## **How It's Priced**
+
+Vercel has a **freemium model**:
+
+- **Hobby (Free)** â Personal projects, limited features
+- **Pro ($20/user/month)** â Small teams/professionals, includes $20 monthly usage credits
+- **Enterprise (Custom pricing)** â Large organizations with custom requirements
+
+Beyond the subscription, you pay for **usage** based on:
+- Bandwidth (data transferred)
+- Function execution time (running server code)
+- Build minutes
+- Add-ons like SAML SSO ($300/month), HIPAA compliance ($350/month), Speed Insights ($10/project)
+
+So your total cost depends on both your subscription tier AND how much your app actually uses.
+
+## **What Makes It Different**
+
+### **Advantages:**
+
+1. **Next.js Integration** â Vercel literally created Next.js, so it's optimized perfectly for it. Nearly zero-config deployment.
+2. **Preview URLs** â Every pull request gets a unique preview URL automatically, making collaboration easier
+3. **Edge Functions** â Run code at 300+ data centers globally with sub-1ms latency, not just one location
+4. **Built-in analytics** â Real user monitoring and performance data without adding extra tools
+5. **AI Features** â v0 tool generates UI code from text descriptions, helping with rapid prototyping
+6. **Developer experience** â Designed to be simple and fast for developers, not DevOps engineers
+
+### **Competitors & How They Differ:**
+
+**Netlify** â Similar pricing and ease-of-use, but less Next.js optimization. Some prefer Netlify for static sites or if you need Deno Functions instead of serverless Node.js.
+
+**Cloudflare Pages** â Cheaper (free unlimited bandwidth), more global edge locations (300+), but less developer-friendly and requires more configuration.
+
+**AWS Amplify** â More powerful and flexible, but requires AWS knowledge and more setup. Better if you need deep AWS integration.
+
+**Traditional VPS/Servers** â Cheaper long-term for predictable usage, but you manage everything yourself (security, scaling, updates).
+
+**Vercel's sweet spot:** Fast, simple deployments for modern JavaScript apps where developer experience matters as much as the final product.
+
+## **Things That Were Confusing or Missing**
+
+1. **Website is JavaScript-heavy** â Vercel's own marketing site is a Next.js app with heavy client-side rendering, so the actual content isn't clearly visible in raw HTML. This made it hard to scan their value prop at a glance.
+
+2. **Pricing clarity** â They advertise "free" heavily, but don't make it immediately obvious that production apps will incur usage charges beyond the free tier. The pricing page requires understanding multiple layers (subscription + usage + add-ons).
+
+3. **"Who it's for" isn't explicit** â Their marketing emphasizes being "for everyone" but is really optimized for Next.js/React developers. Developers using other frameworks (Python, Go, etc.) might have a harder time.
+
+4. **Edge vs. Serverless functions** â The documentation mentions both "Edge Functions" and "Serverless Functions" but it's not immediately clear when to use which, or that they merged in 2026.
+
+5. **AI capabilities are new but not clearly positioned** â They're heavily investing in AI (v0, agents), but it's not clear how this fits with their core deployment platform or what the pricing is for AI features.
+
+---
+
+**Bottom line:** Vercel is a hosting platform that excels at taking modern JavaScript apps from development to production with minimal friction. It's great for teams that want to move fast without dealing with infrastructure. The catch: you're betting on their Next.js-centric ecosystem, and costs can surprise you if your app gets popular.
+
+Sources:
+- [Vercel News August 2026](https://blog.mean.ceo/vercel-news-august-2026/)
+- [Vercel Platform Reviews - Gartner Peer Insights](https://www.gartner.com/reviews/product/vercel-platform)
+- [Vercel Review 2026 - Skills Couter](https://skillscouter.com/vercel-review/)
+- [Vercel Ship 2026 Recap](https://vercel.com/blog/vercel-ship-2026-recap)
+- [Vercel: Develop, Preview, Ship - Aplyca](https://www.aplyca.com/en/blog/blog-what-is-vercel-develop-preview-ship)
+- [What is Vercel 2026 Guide - Fencode](https://www.fencode.dev/en/blog/what-is-vercel-how-it-works-web-deployment-2026)
+- [Vercel Deployment Platform Review - Dev Tools Reviewed](https://devtoolsreviewed.com/vercel-deployment-platform-review/)
+- [Vercel Pricing - Vendr](https://www.vendr.com/marketplace/vercel)
+- [Vercel Pricing Plans Explained - Schematic](https://schematichq.com/blog/vercel-pricing)
+- [Vercel AI Pricing - True Foundry](https://www.truefoundry.com/blog/understanding-vercel-ai-gateway-pricing)
+- [Vercel Pricing 2026 - AI Stack Picks](https://aistackpicks.com/pricing/vercel-pricing-2026/)
+- [Vercel Pricing Complete Guide - Kuberns](https://kuberns.com/blogs/vercel-pricing/)
+- [Vercel Pricing Complete Guide - Temps](https://temps.sh/blog/vercel-pricing-complete-guide-2026)
+- [Vercel Pricing Breakdown - Check That](https://checkthat.ai/brands/vercel/pricing)
+- [10 Vercel Alternatives - DigitalOcean](https://www.digitalocean.com/resources/articles/vercel-alternatives)
+- [Best Vercel Alternatives - Encore](https://encore.dev/articles/vercel-alternatives)
+- [Best Vercel Alternatives - Northflank](https://northflank.com/blog/best-vercel-alternatives-for-scalable-deployments)
+- [Vercel vs Netlify - Focus Reactive](https://focusreactive.com/vercel-vs-netlify-how-to-pick-the-right-platform/)
+- [Netlify and Vercel Alternatives - Oshyn](https://www.oshyn.com/blog/netlify-vercel-alternatives)
+- [Vercel vs Netlify - Vercel Knowledge Base](https://vercel.com/kb/guide/vercel-vs-netlify)
+- [Best Vercel Alternatives 2026 - Lucky Media](https://www.luckymedia.dev/blog/vercel-alternatives)
+- [Vercel vs Netlify 2026 - Techsy](https://techsy.io/en/blog/vercel-vs-netlify)
+- [Best Netlify Alternatives - DanubeData](https://danubedata.ro/blog/best-netlify-alternatives-static-site-hosting-2026)
+- [Vercel's Business Breakdown - Contrary Research](https://research.contrary.com/company/vercel)
+- [Vercel Target Market - Canvas Business Model](https://canvasbusinessmodel.com/blogs/target-market/vercel-target-market)
+- [How Vercel Found Product-Market Fit - Unusual VC](https://www.unusual.vc/post/how-vercel-found-product-market-fit-guillermo-rauch-on-dynamic-web-app-development)
+- [317 Vercel Customers List - Ready Contacts](https://www.readycontacts.com/target-account-profiling/vercel/)
+- [From Open-Source to Enterprise - Decibel VC](https://www.decibel.vc/articles/from-open-source-to-enterprise-how-vercel-built-a-product-led-motion-on-top-of-nextjs)
+- [Vercel Pro Plan - Vercel Docs](https://vercel.com/docs/plans/pro-plan)
+- [Roast Vercel's Website - Roast & Review](https://roast-and-review.com/roast/vercel-website/)
+- [Vercel Target Market - Business Model Canvas Template](https://businessmodelcanvastemplate.com/blogs/target-market/vercel-target-market)
+- [Vercel Review - AI Review](https://ai-review.com/developer-tools/vercel/)
+- [Vercel Review 2026 - Lucky Media](https://www.luckymedia.dev/insights/vercel)
+- [Vercel Review 2026 - The Planet Tools](https://theplanettools.ai/tools/vercel)
+- [Vercel Review 2026 Built for Speed - NET800](https://net800.org/vercel-review-2026-built-for-speed-and-next-js-enthusiasts/)
+- [Next.js on Vercel - Vercel Docs](https://vercel.com/docs/frameworks/full-stack/nextjs)
+- [Complete Technical Guide to Headless Deployment - Focus Reactive](https://focusreactive.com/what-is-vercel/)
+- [What Tech Stack Does Vercel Use - Platform Checker](https://platformchecker.com/blog/vercel-tech-stack-2026)
+- [Vercel Edge in 2026 - Gautam Khorana](https://gautamkhorana.com/blog/vercel-edge-explained-2026/)
+- [Cloudflare Workers vs Vercel Functions 2026 - Kunal Ganglani](https://www.kunalganglani.com/blog/cloudflare-workers-vs-vercel-2026)29:T2365,Perfect! Now I have enough information to give you a comprehensive explanation. Let me create a clear summary of what Vercel is:
+
+## **What Vercel Does**
+
+Vercel is a **cloud platform for deploying and managing modern web applications**. Think of it as a specialized hosting and infrastructure service built specifically for JavaScript/Node.js web apps. Their motto is "Develop, Preview, Ship."
+
+In plain terms: You write code locally, push it to GitHub/GitLab, and Vercel automatically builds, tests, and deploys your app to the internet with minimal configuration. It handles all the server infrastructure complexity behind the scenes.
+
+## **Who It's For**
+
+Vercel targets three main groups:
+
+1. **Individual developers & indie hackers** â People building side projects or small apps
+2. **Small-to-medium businesses (SMBs) and agencies** â Teams building client projects or SaaS products
+3. **Enterprises** â Large companies that need scale, security, and compliance features
+
+It's particularly popular with developers using modern JavaScript frameworks, especially **Next.js** (which Vercel created). They've also heavily pivoted toward **AI application developers** building chatbots and agents.
+
+## **How It's Priced**
+
+Vercel has a **freemium model**:
+
+- **Hobby (Free)** â Personal projects, limited features
+- **Pro ($20/user/month)** â Small teams/professionals, includes $20 monthly usage credits
+- **Enterprise (Custom pricing)** â Large organizations with custom requirements
+
+Beyond the subscription, you pay for **usage** based on:
+- Bandwidth (data transferred)
+- Function execution time (running server code)
+- Build minutes
+- Add-ons like SAML SSO ($300/month), HIPAA compliance ($350/month), Speed Insights ($10/project)
+
+So your total cost depends on both your subscription tier AND how much your app actually uses.
+
+## **What Makes It Different**
+
+### **Advantages:**
+
+1. **Next.js Integration** â Vercel literally created Next.js, so it's optimized perfectly for it. Nearly zero-config deployment.
+2. **Preview URLs** â Every pull request gets a unique preview URL automatically, making collaboration easier
+3. **Edge Functions** â Run code at 300+ data centers globally with sub-1ms latency, not just one location
+4. **Built-in analytics** â Real user monitoring and performance data without adding extra tools
+5. **AI Features** â v0 tool generates UI code from text descriptions, helping with rapid prototyping
+6. **Developer experience** â Designed to be simple and fast for developers, not DevOps engineers
+
+### **Competitors & How They Differ:**
+
+**Netlify** â Similar pricing and ease-of-use, but less Next.js optimization. Some prefer Netlify for static sites or if you need Deno Functions instead of serverless Node.js.
+
+**Cloudflare Pages** â Cheaper (free unlimited bandwidth), more global edge locations (300+), but less developer-friendly and requires more configuration.
+
+**AWS Amplify** â More powerful and flexible, but requires AWS knowledge and more setup. Better if you need deep AWS integration.
+
+**Traditional VPS/Servers** â Cheaper long-term for predictable usage, but you manage everything yourself (security, scaling, updates).
+
+**Vercel's sweet spot:** Fast, simple deployments for modern JavaScript apps where developer experience matters as much as the final product.
+
+## **Things That Were Confusing or Missing**
+
+1. **Website is JavaScript-heavy** â Vercel's own marketing site is a Next.js app with heavy client-side rendering, so the actual content isn't clearly visible in raw HTML. This made it hard to scan their value prop at a glance.
+
+2. **Pricing clarity** â They advertise "free" heavily, but don't make it immediately obvious that production apps will incur usage charges beyond the free tier. The pricing page requires understanding multiple layers (subscription + usage + add-ons).
+
+3. **"Who it's for" isn't explicit** â Their marketing emphasizes being "for everyone" but is really optimized for Next.js/React developers. Developers using other frameworks (Python, Go, etc.) might have a harder time.
+
+4. **Edge vs. Serverless functions** â The documentation mentions both "Edge Functions" and "Serverless Functions" but it's not immediately clear when to use which, or that they merged in 2026.
+
+5. **AI capabilities are new but not clearly positioned** â They're heavily investing in AI (v0, agents), but it's not clear how this fits with their core deployment platform or what the pricing is for AI features.
+
+---
+
+**Bottom line:** Vercel is a hosting platform that excels at taking modern JavaScript apps from development to production with minimal friction. It's great for teams that want to move fast without dealing with infrastructure. The catch: you're betting on their Next.js-centric ecosystem, and costs can surprise you if your app gets popular.
+
+Sources:
+- [Vercel News August 2026](https://blog.mean.ceo/vercel-news-august-2026/)
+- [Vercel Platform Reviews - Gartner Peer Insights](https://www.gartner.com/reviews/product/vercel-platform)
+- [Vercel Review 2026 - Skills Couter](https://skillscouter.com/vercel-review/)
+- [Vercel Ship 2026 Recap](https://vercel.com/blog/vercel-ship-2026-recap)
+- [Vercel: Develop, Preview, Ship - Aplyca](https://www.aplyca.com/en/blog/blog-what-is-vercel-develop-preview-ship)
+- [What is Vercel 2026 Guide - Fencode](https://www.fencode.dev/en/blog/what-is-vercel-how-it-works-web-deployment-2026)
+- [Vercel Deployment Platform Review - Dev Tools Reviewed](https://devtoolsreviewed.com/vercel-deployment-platform-review/)
+- [Vercel Pricing - Vendr](https://www.vendr.com/marketplace/vercel)
+- [Vercel Pricing Plans Explained - Schematic](https://schematichq.com/blog/vercel-pricing)
+- [Vercel AI Pricing - True Foundry](https://www.truefoundry.com/blog/understanding-vercel-ai-gateway-pricing)
+- [Vercel Pricing 2026 - AI Stack Picks](https://aistackpicks.com/pricing/vercel-pricing-2026/)
+- [Vercel Pricing Complete Guide - Kuberns](https://kuberns.com/blogs/vercel-pricing/)
+- [Vercel Pricing Complete Guide - Temps](https://temps.sh/blog/vercel-pricing-complete-guide-2026)
+- [Vercel Pricing Breakdown - Check That](https://checkthat.ai/brands/vercel/pricing)
+- [10 Vercel Alternatives - DigitalOcean](https://www.digitalocean.com/resources/articles/vercel-alternatives)
+- [Best Vercel Alternatives - Encore](https://encore.dev/articles/vercel-alternatives)
+- [Best Vercel Alternatives - Northflank](https://northflank.com/blog/best-vercel-alternatives-for-scalable-deployments)
+- [Vercel vs Netlify - Focus Reactive](https://focusreactive.com/vercel-vs-netlify-how-to-pick-the-right-platform/)
+- [Netlify and Vercel Alternatives - Oshyn](https://www.oshyn.com/blog/netlify-vercel-alternatives)
+- [Vercel vs Netlify - Vercel Knowledge Base](https://vercel.com/kb/guide/vercel-vs-netlify)
+- [Best Vercel Alternatives 2026 - Lucky Media](https://www.luckymedia.dev/blog/vercel-alternatives)
+- [Vercel vs Netlify 2026 - Techsy](https://techsy.io/en/blog/vercel-vs-netlify)
+- [Best Netlify Alternatives - DanubeData](https://danubedata.ro/blog/best-netlify-alternatives-static-site-hosting-2026)
+- [Vercel's Business Breakdown - Contrary Research](https://research.contrary.com/company/vercel)
+- [Vercel Target Market - Canvas Business Model](https://canvasbusinessmodel.com/blogs/target-market/vercel-target-market)
+- [How Vercel Found Product-Market Fit - Unusual VC](https://www.unusual.vc/post/how-vercel-found-product-market-fit-guillermo-rauch-on-dynamic-web-app-development)
+- [317 Vercel Customers List - Ready Contacts](https://www.readycontacts.com/target-account-profiling/vercel/)
+- [From Open-Source to Enterprise - Decibel VC](https://www.decibel.vc/articles/from-open-source-to-enterprise-how-vercel-built-a-product-led-motion-on-top-of-nextjs)
+- [Vercel Pro Plan - Vercel Docs](https://vercel.com/docs/plans/pro-plan)
+- [Roast Vercel's Website - Roast & Review](https://roast-and-review.com/roast/vercel-website/)
+- [Vercel Target Market - Business Model Canvas Template](https://businessmodelcanvastemplate.com/blogs/target-market/vercel-target-market)
+- [Vercel Review - AI Review](https://ai-review.com/developer-tools/vercel/)
+- [Vercel Review 2026 - Lucky Media](https://www.luckymedia.dev/insights/vercel)
+- [Vercel Review 2026 - The Planet Tools](https://theplanettools.ai/tools/vercel)
+- [Vercel Review 2026 Built for Speed - NET800](https://net800.org/vercel-review-2026-built-for-speed-and-next-js-enthusiasts/)
+- [Next.js on Vercel - Vercel Docs](https://vercel.com/docs/frameworks/full-stack/nextjs)
+- [Complete Technical Guide to Headless Deployment - Focus Reactive](https://focusreactive.com/what-is-vercel/)
+- [What Tech Stack Does Vercel Use - Platform Checker](https://platformchecker.com/blog/vercel-tech-stack-2026)
+- [Vercel Edge in 2026 - Gautam Khorana](https://gautamkhorana.com/blog/vercel-edge-explained-2026/)
+- [Cloudflare Workers vs Vercel Functions 2026 - Kunal Ganglani](https://www.kunalganglani.com/blog/cloudflare-workers-vs-vercel-2026)
+
+OUTCOME: success1f:["$","$L27",null,{"id":"a6f56374-4e80-41d0-a7b8-ce365a37e6a8","initialReplay":false,"preload":{"id":"a6f56374-4e80-41d0-a7b8-ce365a37e6a8","status":"succeeded","intent_id":"understand-offering","domain":"vercel.com","agent":{"harness":"claude-agent-sdk","model":"claude-haiku-4-5"},"started_at":"2026-08-19T12:17:34.578+00:00","finished_at":"2026-08-19T12:18:38.903+00:00","stream_url":"/api/journey/runs/a6f56374-4e80-41d0-a7b8-ce365a37e6a8/stream","contractVersion":"1.21.0","verdict":"satisfied","step_count":12,"result":{"run_id":"a6f56374-4e80-41d0-a7b8-ce365a37e6a8","intent_id":"understand-offering","domain":"vercel.com","harness":"claude-agent-sdk","model":"claude-haiku-4-5","started_at":"2026-08-19T12:17:36.496Z","finished_at":"2026-08-19T12:18:38.903Z","outcome":"success","verdict":"satisfied","agent_response":"$28","num_turns":5,"duration_ms":60563,"cost_usd":0.178698,"input_tokens":1906,"output_tokens":3714,"cache_read_tokens":55740,"cache_write_tokens":28828,"trajectory":{"steps":[{"id":0,"turn":"$undefined","type":"text","parent_id":"$undefined","label":"$undefined","text":"I'll help you understand Vercel by exploring their website. Let me start by visiting the main site and key pages."},{"id":1,"turn":1,"type":"tool_call","parent_id":"$undefined","action":"fetch","tool":"mcp__orank__api_call","url":"vercel.com/","url_host":"vercel.com","url_path":"/","search_query":"$undefined","source":"$undefined","anchor_relation":"exact","attribution":{"kind":"prior_knowledge","artifact_kind":"$undefined","signal_id":"$undefined","method":"heuristic","confidence":"$undefined","referrer":"$undefined"},"artifact_key":"$undefined","fetch_method":"$undefined","status":200,"duration_ms":352,"label":"home","completed":true,"skill_name":"$undefined"},{"id":2,"turn":2,"type":"tool_call","parent_id":"$undefined","action":"fetch","tool":"mcp__orank__api_call","url":"vercel.com/pricing","url_host":"vercel.com","url_path":"/pricing","search_query":"$undefined","source":"$undefined","anchor_relation":"exact","attribution":{"kind":"previous_artifact","artifact_kind":"$undefined","signal_id":"$undefined","method":"llm","confidence":"strong","referrer":{"turn":1,"step_id":1,"artifact_kind":"homepage","url_path":"/"}},"artifact_key":"$undefined","fetch_method":"$undefined","status":200,"duration_ms":169,"label":"docs","completed":true,"skill_name":"$undefined"},{"id":3,"turn":2,"type":"tool_call","parent_id":"$undefined","action":"fetch","tool":"mcp__orank__api_call","url":"vercel.com/solutions","url_host":"vercel.com","url_path":"/solutions","search_query":"$undefined","source":"$undefined","anchor_relation":"exact","attribution":{"kind":"previous_artifact","artifact_kind":"$undefined","signal_id":"$undefined","method":"llm","confidence":"weak","referrer":{"turn":1,"step_id":1,"artifact_kind":"homepage","url_path":"/"}},"artifact_key":"$undefined","fetch_method":"$undefined","status":200,"duration_ms":2447,"label":"/solutions","completed":true,"skill_name":"$undefined"},{"id":4,"turn":"$undefined","type":"text","parent_id":"$undefined","label":"$undefined","text":"The page content is minified. Let me try fetching some more specific documentation pages to get clearer information."},{"id":5,"turn":3,"type":"tool_call","parent_id":"$undefined","action":"fetch","tool":"mcp__orank__api_call","url":"vercel.com/about","url_host":"vercel.com","url_path":"/about","search_query":"$undefined","source":"$undefined","anchor_relation":"exact","attribution":{"kind":"prior_knowledge","artifact_kind":"$undefined","signal_id":"$undefined","method":"heuristic","confidence":"$undefined","referrer":"$undefined"},"artifact_key":"$undefined","fetch_method":"$undefined","status":200,"duration_ms":153,"label":"docs","completed":true,"skill_name":"$undefined"},{"id":6,"turn":3,"type":"tool_call","parent_id":"$undefined","action":"fetch","tool":"mcp__orank__api_call","url":"vercel.com/docs","url_host":"vercel.com","url_path":"/docs","search_query":"$undefined","source":"$undefined","anchor_relation":"exact","attribution":{"kind":"prior_knowledge","artifact_kind":"$undefined","signal_id":"$undefined","method":"heuristic","confidence":"$undefined","referrer":"$undefined"},"artifact_key":"$undefined","fetch_method":"$undefined","status":200,"duration_ms":687,"label":"docs","completed":true,"skill_name":"$undefined"},{"id":7,"turn":4,"type":"tool_call","parent_id":"$undefined","action":"fetch","tool":"mcp__orank__api_call","url":"vercel.com/features","url_host":"vercel.com","url_path":"/features","search_query":"$undefined","source":"$undefined","anchor_relation":"exact","attribution":{"kind":"prior_knowledge","artifact_kind":"$undefined","signal_id":"$undefined","method":"heuristic","confidence":"$undefined","referrer":"$undefined"},"artifact_key":"$undefined","fetch_method":"$undefined","status":200,"duration_ms":1384,"label":"/features","completed":true,"skill_name":"$undefined"},{"id":8,"turn":"$undefined","type":"text","parent_id":"$undefined","label":"$undefined","text":"The website is heavily JavaScript-rendered. Let me search for clear information about Vercel to supplement what I'm finding."},{"id":9,"turn":5,"type":"tool_call","parent_id":"$undefined","action":"search","tool":"WebSearch","url":"$undefined","url_host":"$undefined","url_path":"$undefined","search_query":"Vercel what is it platform purpose 2026","source":"$undefined","anchor_relation":"$undefined","attribution":{"kind":"web_search","artifact_kind":"$undefined","signal_id":"$undefined","method":"heuristic","confidence":"weak","referrer":{"turn":4,"step_id":7,"artifact_kind":"$undefined","url_path":"/features"}},"artifact_key":"$undefined","fetch_method":"$undefined","status":"$undefined","duration_ms":7168,"label":"search","completed":true,"skill_name":"$undefined"},{"id":10,"turn":5,"type":"tool_call","parent_id":"$undefined","action":"search","tool":"WebSearch","url":"$undefined","url_host":"$undefined","url_path":"$undefined","search_query":"Vercel pricing plans 2026","source":"$undefined","anchor_relation":"$undefined","attribution":{"kind":"web_search","artifact_kind":"$undefined","signal_id":"$undefined","method":"heuristic","confidence":"weak","referrer":{"turn":4,"step_id":7,"artifact_kind":"$undefined","url_path":"/features"}},"artifact_key":"$undefined","fetch_method":"$undefined","status":"$undefined","duration_ms":6535,"label":"search","completed":true,"skill_name":"$undefined"},{"id":11,"turn":5,"type":"tool_call","parent_id":"$undefined","action":"search","tool":"WebSearch","url":"$undefined","url_host":"$undefined","url_path":"$undefined","search_query":"Vercel vs alternatives Netlify AWS competitors","source":"$undefined","anchor_relation":"$undefined","attribution":{"kind":"web_search","artifact_kind":"$undefined","signal_id":"$undefined","method":"heuristic","confidence":"weak","referrer":{"turn":4,"step_id":7,"artifact_kind":"$undefined","url_path":"/features"}},"artifact_key":"$undefined","fetch_method":"$undefined","status":"$undefined","duration_ms":9143,"label":"search","completed":true,"skill_name":"$undefined"},{"id":12,"turn":"$undefined","type":"text","parent_id":"$undefined","label":"$undefined","text":"Let me get some more direct information from Vercel's own content."},{"id":13,"turn":6,"type":"tool_call","parent_id":"$undefined","action":"fetch","tool":"mcp__orank__api_call","url":"vercel.com/kb/guide/vercel-vs-netlify","url_host":"vercel.com","url_path":"/kb/guide/vercel-vs-netlify","search_query":"$undefined","source":"$undefined","anchor_relation":"exact","attribution":{"kind":"web_search","artifact_kind":"$undefined","signal_id":"$undefined","method":"heuristic","confidence":"strong","referrer":{"turn":5,"step_id":11,"artifact_kind":"$undefined","url_path":"$undefined"}},"artifact_key":"$undefined","fetch_method":"$undefined","status":200,"duration_ms":3021,"label":"/kb/guide/vercel-vs-neâ¦","completed":true,"skill_name":"$undefined"},{"id":14,"turn":6,"type":"tool_call","parent_id":"$undefined","action":"search","tool":"WebSearch","url":"$undefined","url_host":"$undefined","url_path":"$undefined","search_query":"\"Vercel\" \"who is it for\" \"target audience\" developers teams","source":"$undefined","anchor_relation":"$undefined","attribution":{"kind":"web_search","artifact_kind":"$undefined","signal_id":"$undefined","method":"heuristic","confidence":"weak","referrer":{"turn":4,"step_id":7,"artifact_kind":"$undefined","url_path":"/features"}},"artifact_key":"$undefined","fetch_method":"$undefined","status":"$undefined","duration_ms":6492,"label":"search","completed":true,"skill_name":"$undefined"},{"id":15,"turn":6,"type":"tool_call","parent_id":"$undefined","action":"search","tool":"WebSearch","url":"$undefined","url_host":"$undefined","url_path":"$undefined","search_query":"Vercel features Next.js edge functions analytics 2026","source":"$undefined","anchor_relation":"$undefined","attribution":{"kind":"web_search","artifact_kind":"$undefined","signal_id":"$undefined","method":"heuristic","confidence":"weak","referrer":{"turn":4,"step_id":7,"artifact_kind":"$undefined","url_path":"/features"}},"artifact_key":"$undefined","fetch_method":"$undefined","status":"$undefined","duration_ms":7162,"label":"search","completed":true,"skill_name":"$undefined"},{"id":16,"turn":"$undefined","type":"text","parent_id":"$undefined","label":"$undefined","text":"$29"}],"action_sequence":"fetch,fetch+fetch,fetch+fetch,fetch,search+search+search,fetch+search+search","signals_observed":["homepage","pricing-page","about-page","developer-portal"],"friction_outcome":"succeeded_with_heavy_bridge","status_profile":{"count_2xx":7,"count_3xx":0,"count_4xx":0,"count_5xx":0,"first_error_step":"$undefined","first_error_kind":"$undefined"},"well_known_probes":[],"path_origin_distribution":{"prior_knowledge":0.57,"web_search":0.14,"previous_artifact":0.29,"other":0},"link_following_rate":0.29},"insight":{"summary":"The agent successfully gathered enough information to provide a comprehensive explanation of Vercel's purpose, target audience, pricing model, and competitive positioning, but had to rely heavily on web search results and prior knowledge rather than Vercel's own website. The vercel.com domain itself is a JavaScript-heavy Next.js application that returns minified HTML, making it unreadable to the agent and forcing it to supplement with external sources. Despite this friction, the agent delivered a coherent, well-sourced answer that directly addressed all four aspects of the task.","key_observations":["Steps [1â8] attempted to fetch Vercel's own pages (homepage, pricing, solutions, about, docs, features, Netlify comparison) but all returned minified, unreadable HTML; the agent explicitly noted 'the page content is minified' and 'the website is heavily JavaScript-rendered,' indicating the marketing site does not publish machine-readable information about its value prop, target audience, or pricing.","All substantive information came from web search results [9â11, 14â15], which surfaced third-party review sites, pricing aggregators, and Vercel's own blog/knowledge base articles. The agent cited 28 sources in the final response, the vast majority from non-Vercel domains (skillscouter.com, vendr.com, schematichq.com, gartner.com, digitalocean.com, etc.), indicating Vercel's primary website was not the information source.","The agent successfully synthesized pricing information (freemium + usage-based model, Pro $20/user/month, Enterprise custom), identified three target audiences (indie developers, SMBs, enterprises), and articulated differentiation (Next.js optimization, preview URLs, edge functions, developer experience vs. Netlify, Cloudflare, AWS). However, it flagged confusion about pricing clarity, unclear positioning of AI features, and lack of explicit 'who it's for' guidance on the main site.","The site's own Netlify comparison page [13] was fetched but also returned minified HTML, so it did not contribute readable content; the agent instead relied on external Netlify vs. Vercel comparison articles to build the competitive analysis.","57% of fetches used prior knowledge (guessing standard URLs like /pricing, /about, /docs, /features) and 29% came from previous artifacts, indicating the agent was pattern-matching on typical SaaS site structures rather than following discoverable navigation or published sitemaps."],"generated_at":"2026-08-19T12:18:47.008Z","journey_layers":["discovery","identity"]},"run_signals":{"version":3,"intent_category":"discovery-evaluation","category_confidence":"high","task_satisfied":"satisfied","verdict":"satisfied","outcome":"success","friction_outcome":"succeeded_with_heavy_bridge","bridge_classification":"prior_knowledge_fallback","first_action":"fetch","first_target":{"page_role":"homepage","anchor_relation":"exact","source":"direct"},"steps_count":12,"search_count":5,"reached_anchor":true,"link_following_rate":0.29,"prior_knowledge_ratio":0.57,"signals_observed":["homepage","pricing-page","about-page","developer-portal"],"page_reach":{"homepage":{"reached":true,"first_turn":1,"steps_to":0},"pricing":{"reached":true,"first_turn":2,"steps_to":1},"other":{"reached":true,"first_turn":2,"steps_to":2},"docs":{"reached":true,"first_turn":3,"steps_to":3}},"artifacts":{},"success_step_ids":[9,10,11,14,15],"success_route":{"artifacts":{},"page_roles":{"other":"helper","homepage":"load_bearing"},"closer":{"artifact_key":"$undefined","page_role":"homepage"}},"journey_layers":["discovery","identity"]}}}}]

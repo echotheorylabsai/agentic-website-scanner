@@ -1,0 +1,99 @@
+ora
+JOURNEY
+Contact
+ora.ai
+success
+Claude Code · Haiku 4.5
+1:02
+Run new journey
+INTENT
+
+What does ora.ai do and who is it for? Explain it back to me.
+
+14
+STEPS
+62.6s
+DURATION
+$0.1269
+COST
+140,508
+TOKENS
+replay
+23 steps
+9 reasoning steps
+3 searches
+home
+docs
+docs
+docs
+/index.md
+openapi
+/methodology
+search
+llms.txt
+/leaderboard
+search
+search
+/directory
+llms-full.txt
+100%
+ON-SITE DISCOVERY
+100%
+RELIABILITY
+91%
+LINK FOLLOWING
+PATH ORIGIN
+previous resource
+91%
+prior knowledge
+9%
+INSIGHT
+
+The agent successfully gathered comprehensive information about ora.ai's purpose, pricing, target users, and differentiation by fetching structured documentation (index.md, llms.txt, llms-full.txt) and the OpenAPI spec. The site is highly agent-navigable — it publishes plain-text summaries and full documentation explicitly designed for machine consumption, though the interactive pages (methodology, about, directory) did not render usably as HTML. The agent had to assemble the full picture from multiple text-based artifacts rather than a single canonical page.
+
+›
+Step [7] (index.md) provided the core value proposition in plain text: agent-readiness scoring across four layers, use cases, and methodology overview. This was the foundational artifact.
+›
+Step [21] (llms-full.txt) contained the most complete narrative explanation, including detailed descriptions of when to use ora, how the scoring works, who the users are, and pricing — explicitly designed as 'full public documentation in one file.'
+›
+Step [13] (llms.txt) served as a shorter reference version, reiterating that ora is 'the standard for optimizing your site so agents can actually use and recommend you' and clarifying its open-standard positioning.
+›
+Step [8] (OpenAPI spec) provided machine-readable API structure and confirmed 'no API key required for read-only access; agent-only write operations' with rate limiting by IP, directly answering the pricing question.
+›
+The site deliberately publishes multiple formats (markdown, plain text, structured API docs) for machine consumption, making it highly discoverable for agents. However, interactive pages like /methodology returned raw HTML that did not render to plain text, forcing the agent to rely on cross-referenced documentation.
+›
+The agent did not need to search the public web to answer the core task — all answers were on the domain itself via prior knowledge. Web searches [16, 18] were exploratory attempts to find competitive positioning, but ora.ai does not explicitly compare itself to alternatives on its own site.
+›
+One documented confusion (methodology layer count shifting between 4 and 5 layers) arose from the HTML-rendered /methodology page not being fully parseable, whereas the markdown versions were clear and consistent.
+Want to run your own?
+
+Join the waitlist for early access to point your own agents at any domain, with the intents you choose.
+
+Work email
+Join the waitlist
+or talk to us about agent readiness →
+© 2026 era labs. All rights reserved.
+ora
+
+The standard for agent experience.
+
+GET UPDATES
+→
+
+© 2026 era labs
+
+PRODUCT
+Scan a site
+MCP server
+Journey
+Directory
+RESOURCES
+Methodology
+Research
+Blog
+API Docs
+COMPANY
+About
+Contact
+Privacy
+@oradotai

@@ -1,0 +1,98 @@
+ora
+JOURNEY
+Contact
+eve.dev
+success
+Claude Code · Haiku 4.5
+1:14
+Run new journey
+INTENT
+
+What does eve.dev do and who is it for? Explain it back to me.
+
+15
+STEPS
+74.4s
+DURATION
+$0.7166
+COST
+169,828
+TOKENS
+replay
+21 steps
+6 reasoning steps
+4 searches
+home
+search
+docs
+docs
+docs
+docs
+search
+/eve
+docs
+/vercel/eve
+docs
+search
+docs
+search
+docs
+73%
+ON-SITE DISCOVERY
+82%
+RELIABILITY
+64%
+LINK FOLLOWING
+PATH ORIGIN
+previous resource
+64%
+web search
+27%
+prior knowledge
+9%
+INSIGHT
+
+The agent successfully assembled a comprehensive overview of Eve by cross-referencing official documentation across eve.dev and Vercel's docs, supplemented by web search for competitor context. The site itself is poorly navigable for direct pricing discovery—eve.dev lacks a dedicated pricing page and delegates to Vercel infrastructure docs—forcing the agent to rely on prior knowledge and external sources to construct a complete answer.
+
+›
+Step [7] (eve.dev/docs/getting-started.md) and step [15] (vercel.com/docs/eve/pricing.md) were the primary content-bearing sources: the first explained Eve as a TypeScript framework for durable agents with file-driven design; the second detailed the billing model (free framework, paid Vercel infrastructure + usage-based third-party costs). Neither was discoverable directly from eve.dev's homepage—the agent had to guess the URL paths.
+›
+Step [12] (vercel.com/docs/eve/pricing) and step [13] (github.com/vercel/eve) confirmed Eve's open-source Apache 2.0 license and supplier (Vercel), but required external navigation since eve.dev does not link prominently to pricing or GitHub.
+›
+Eve.dev's homepage and /docs structure returned only HTML shells (steps [1], [5], [8])—likely client-side-rendered Next.js pages—containing no indexable text content. The agent had to rely on structured markdown documentation fetches (steps [7], [18]) and web search (steps [3], [9], [16], [19]) to extract information that should have been plainly visible on the site itself.
+›
+Pricing information was fragmented across three separate Vercel documentation pages (Vercel Pro base cost, Eve-specific resource usage, sandbox compute costs), with no aggregated summary on eve.dev. The agent had to synthesize multiple sources to answer the pricing question—a sign of poor content architecture for agent-driven discovery.
+›
+Competitor information (Mastra, LangGraph, CrewAI) was entirely absent from eve.dev and sourced via external web search (step [9]), indicating the site does not attempt competitive positioning or differentiation.
+Want to run your own?
+
+Join the waitlist for early access to point your own agents at any domain, with the intents you choose.
+
+Work email
+Join the waitlist
+or talk to us about agent readiness →
+© 2026 era labs. All rights reserved.
+ora
+
+The standard for agent experience.
+
+GET UPDATES
+→
+
+© 2026 era labs
+
+PRODUCT
+Scan a site
+MCP server
+Journey
+Directory
+RESOURCES
+Methodology
+Research
+Blog
+API Docs
+COMPANY
+About
+Contact
+Privacy
+@oradotai

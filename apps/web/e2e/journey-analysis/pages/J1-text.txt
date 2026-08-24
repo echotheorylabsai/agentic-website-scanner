@@ -1,0 +1,95 @@
+ora
+JOURNEY
+Contact
+vercel.com
+success
+Claude Code · Haiku 4.5
+1:00
+Run new journey
+INTENT
+
+What does vercel.com do and who is it for? Explain it back to me.
+
+12
+STEPS
+60.6s
+DURATION
+$0.1787
+COST
+90,188
+TOKENS
+replay
+17 steps
+5 reasoning steps
+5 searches
+home
+docs
+/solutions
+docs
+docs
+/features
+search
+search
+search
+/kb/guide/vercel-vs-ne…
+search
+search
+86%
+ON-SITE DISCOVERY
+100%
+RELIABILITY
+29%
+LINK FOLLOWING
+PATH ORIGIN
+previous resource
+29%
+web search
+14%
+prior knowledge
+57%
+INSIGHT
+
+The agent successfully gathered enough information to provide a comprehensive explanation of Vercel's purpose, target audience, pricing model, and competitive positioning, but had to rely heavily on web search results and prior knowledge rather than Vercel's own website. The vercel.com domain itself is a JavaScript-heavy Next.js application that returns minified HTML, making it unreadable to the agent and forcing it to supplement with external sources. Despite this friction, the agent delivered a coherent, well-sourced answer that directly addressed all four aspects of the task.
+
+›
+Steps [1–8] attempted to fetch Vercel's own pages (homepage, pricing, solutions, about, docs, features, Netlify comparison) but all returned minified, unreadable HTML; the agent explicitly noted 'the page content is minified' and 'the website is heavily JavaScript-rendered,' indicating the marketing site does not publish machine-readable information about its value prop, target audience, or pricing.
+›
+All substantive information came from web search results [9–11, 14–15], which surfaced third-party review sites, pricing aggregators, and Vercel's own blog/knowledge base articles. The agent cited 28 sources in the final response, the vast majority from non-Vercel domains (skillscouter.com, vendr.com, schematichq.com, gartner.com, digitalocean.com, etc.), indicating Vercel's primary website was not the information source.
+›
+The agent successfully synthesized pricing information (freemium + usage-based model, Pro $20/user/month, Enterprise custom), identified three target audiences (indie developers, SMBs, enterprises), and articulated differentiation (Next.js optimization, preview URLs, edge functions, developer experience vs. Netlify, Cloudflare, AWS). However, it flagged confusion about pricing clarity, unclear positioning of AI features, and lack of explicit 'who it's for' guidance on the main site.
+›
+The site's own Netlify comparison page [13] was fetched but also returned minified HTML, so it did not contribute readable content; the agent instead relied on external Netlify vs. Vercel comparison articles to build the competitive analysis.
+›
+57% of fetches used prior knowledge (guessing standard URLs like /pricing, /about, /docs, /features) and 29% came from previous artifacts, indicating the agent was pattern-matching on typical SaaS site structures rather than following discoverable navigation or published sitemaps.
+Want to run your own?
+
+Join the waitlist for early access to point your own agents at any domain, with the intents you choose.
+
+Work email
+Join the waitlist
+or talk to us about agent readiness →
+© 2026 era labs. All rights reserved.
+ora
+
+The standard for agent experience.
+
+GET UPDATES
+→
+
+© 2026 era labs
+
+PRODUCT
+Scan a site
+MCP server
+Journey
+Directory
+RESOURCES
+Methodology
+Research
+Blog
+API Docs
+COMPANY
+About
+Contact
+Privacy
+@oradotai
