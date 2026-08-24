@@ -118,6 +118,7 @@ async function executeScan(job: RunningJob, target: string, _attempt = 0) {
   const prev = await latestReport(target);
 
   const onComplete = async (out: ScanOutput) => {
+    const recs = new Map(vendoredCatalog.checks.filter((c) => c.recommendation).map((c) => [c.id, c.recommendation as string]));
     // gating → scoring stage updates
     if (scanRow) {
       await db.update(schema.scans).set({ status: "gating" }).where(eq(schema.scans.id, scanRow.id));
@@ -128,7 +129,6 @@ async function executeScan(job: RunningJob, target: string, _attempt = 0) {
     for (const g of out.gated) {
       // B4-1: na rows serve catalog recommendation; null ONLY on REST-family branch
       const isRestFamilyNa = g.status === "na" && (g.na_reason ?? g.details ?? "").startsWith("No REST API surface");
-      const recs = new Map(vendoredCatalog.checks.filter((c) => c.recommendation).map((c) => [c.id, c.recommendation as string]));
       await db.insert(schema.checks).values({
         scan_id: scanRow!.id,
         check_id: g.id,

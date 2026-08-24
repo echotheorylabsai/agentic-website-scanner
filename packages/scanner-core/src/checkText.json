@@ -130,7 +130,7 @@
    "channel": "details",
    "text": "No JSON-LD structured data found on homepage",
    "provenance": [
-    "meta.ai",
+    "eve.dev",
     "example.org"
    ],
    "datumAudit": "pass",
@@ -253,8 +253,8 @@
    "channel": "details",
    "text": "No declared OAuth scopes, security schemes, or scoped-permission documentation found",
    "provenance": [
-    "meta.ai",
-    "vercel.com"
+    "eve.dev",
+    "meta.ai"
    ],
    "datumAudit": "pass",
    "signOff": "auto (datum-free)"

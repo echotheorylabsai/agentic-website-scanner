@@ -20,7 +20,7 @@ export const GRAPHQL_FAMILY = new Set(["graphql-error-type-definition", "graphql
 // Captured na strings (docs/is-agentic-check-text-verbatim.md, [static] confirmed)
 export const NA_TEXT = {
   rest: "No REST API surface detected on this domain",
-  graphql: "No GraphQL surface detected on this domain",
+  graphql: "No GraphQL API surface detected on this domain",
   mcp: "No MCP server detected on this domain",
   mcpAuth: "MCP server requires authentication",
   commerce: "No commerce signals detected - agent-payment protocols are optional for non-commerce sites",
