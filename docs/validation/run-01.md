@@ -109,3 +109,29 @@ Business logic for every deterministic check is now either **byte-matched to obs
 - 42 core tests + 3 web schema tests pass (45 total), tsc clean on both packages
 - C1 golden: every adopted (checkId,status)→text pair asserted present in emitted sources; family strings match NA_TEXT exactly
 - Per-check diff re-run: artifacts/deep-diff-post-text.txt
+
+---
+
+# Addendum 2: Live Browser E2E Test (Playwright)
+
+**Method:** Playwright Chromium drove the real UI at localhost:3100 — home page → domain entry → live scan progress → rendered report (screenshots for all 4 domains + roster expansion + in-browser markdown negotiation check). Official pages captured side-by-side from is-agentic.com/scan/<domain>.
+
+**Results (browser-verified):**
+
+| Domain | Official (live) | Ours (live UI) | Δ | Labels match |
+|---|---|---|---|---|
+| vercel.com | 86 | 92 | +6 | ✓ Strong technical baseline |
+| eve.dev | 71 | 66 | −5 | ✗ (see below) |
+| meta.ai | 32 | 25 | −7 | ✓ Agents are likely to struggle |
+| example.org | 51 | 35 | −16 | ✗ (see below) |
+
+**New label band discovered:** official eve.dev at 71 shows "Ready with a few material gaps" — a band between "Strong technical baseline" (≥80) and "Important blockers remain". Added to scorer bands (≥70) with regression test.
+
+**Markdown negotiation verified in-browser:** `Accept: text/markdown` → `text/markdown; charset=utf-8` with full report body.
+
+**Remaining score deltas explained:**
+- Roster coverage: we implement 50 deterministic checks of Ora's 124; non-overlap (LLM-judged etc.) shifts pool denominators (example.org: their Essential pool earns 46.7 across checks we don't all implement)
+- Documented heuristic residuals (content-no-js, scoped-permissions, metadata-completeness, oauth-support)
+- eve.dev label mismatch is the band discovery above — now fixed for future scans
+
+**Artifacts:** `artifacts/browser/` — 01-home.png, report-<domain>.png (+roster), official-<domain>.png

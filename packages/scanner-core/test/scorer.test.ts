@@ -50,6 +50,18 @@ describe.each([
 
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 
+describe("label bands (live-observed)", () => {
+  it("matches all five official observations", async () => {
+    const { lookupLabel } = await import("../src/scorer.js");
+    expect(lookupLabel(86)).toBe("Strong technical baseline");
+    expect(lookupLabel(85)).toBe("Strong technical baseline");
+    expect(lookupLabel(71)).toBe("Ready with a few material gaps");
+    expect(lookupLabel(55)).toBe("Important blockers remain");
+    expect(lookupLabel(51)).toBe("Important blockers remain");
+    expect(lookupLabel(32)).toBe("Agents are likely to struggle");
+  });
+});
+
 describe("grade bands", () => {
   it("matches A+≥95 A≥86 B≥70 C≥48 D≥28 F", () => {
     expect(gradeFor(95)).toBe("A+");

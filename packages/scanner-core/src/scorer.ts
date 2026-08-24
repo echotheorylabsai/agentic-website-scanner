@@ -126,9 +126,10 @@ function issueOrderKey(c: ScoredCheck, gains: Map<string, number>): [number, num
 /** Label bands (approximate, from observed reports) — refined by harness snapshots. */
 const DEFAULT_LABELS: Array<[number, string]> = [
   [95, "Exceptional agent experience"],
-  [80, "Strong technical baseline"],      // vercel.com 85 → this band (observed)
-  [48, "Important blockers remain"],       // eve 55, example.org 51 (observed)
-  [28, "Agents are likely to struggle"],   // meta.ai 32 (observed)
+  [80, "Strong technical baseline"],        // vercel.com 85, 86 → this band (observed)
+  [70, "Ready with a few material gaps"],   // eve.dev 71 → this band (observed 2026-08-24 fresh scan)
+  [48, "Important blockers remain"],        // eve 55, example.org 51 (observed)
+  [28, "Agents are likely to struggle"],    // meta.ai 32 (observed)
   [-Infinity, "Agents are likely to struggle"],
 ];
 
