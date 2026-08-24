@@ -1,314 +1,279 @@
-# Agentic Website Scanner Implementation Plan
+# Agentic Website Scanner Implementation Plan (v2)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a locally-running clone of is-agentic.com that scans websites for AI-agent readiness, produces comparable reports, and validates its logic against the real tool via a comparison harness.
+**Goal:** Build a locally-running clone of is-agentic.com whose outputs are comparable to the real tool's, validated live via per-check diffs and the official CLI pointed at localhost.
 
-**Architecture:** Next.js monolith (`apps/web`) hosting UI + API + SSE; `packages/scanner-core` is a pure-TS engine emitting an async iterable of events; Postgres (local Docker) via Drizzle; validation through a `tools/compare.ts` harness plus the official CLI pointed at localhost.
+**Architecture:** Next.js monolith (`apps/web`) + pure-TS `packages/scanner-core` engine; Postgres (local Docker) via Drizzle; comparison harness in `tools/`.
 
-**Tech Stack:** TypeScript, Next.js App Router, Drizzle ORM + Postgres, zod, vitest, undici, Playwright.
+**Tech Stack:** TypeScript · Next.js App Router · Drizzle/Postgres · zod · vitest · undici · Playwright.
 
-**Spec:** `docs/superpowers/specs/2026-08-23-agentic-scanner-ux-design.md` (rev 2)
+**Spec:** `docs/superpowers/specs/2026-08-23-agentic-scanner-ux-design.md` (rev 3)
 
 ## Global Constraints
 
-- Grouping uses Ora's `essentialsTier` field from the pinned catalog — NEVER native `tier`
-- Pinned `contractVersion = "1.20.1"`; startup must assert it when fetching `ora.ai/api/checks`
-- Scoring: `fraction=score/max_score`; `error ⇒ fraction 0, stays eligible`; `Essential=80×mean`, `Recommended=20×mean` (equal weight); `Bonus=min(5, 0.25×Σ)`; score=`round(trunc0.1(E)+trunc0.1(R)+trunc0.1(B))`; store raw, serialize `earned=round(raw,1)`
-- `/api/v1/report` JSON must satisfy the real `PublicScanReport` schema (parse real is-agentic payloads as fixtures)
-- SSE event names must match the real protocol exactly (`kind_detecting…scan_archived,error`) + our `relevance_assessed`
-- No rate limiting, no auth, no background rescans; Rescan is a manual button
-- Every probe returns evidence strings naming what was observed; never bare failures
-- Node ≥20; all tests `vitest`; commits after every passing step
+- Pool vocabulary: Ora `essentialsTier ∈ {required, recommended, emerging}` — **the string "essential" does not exist**. Essential pool = `essentialsTier==='required'`; `emerging` ⇒ bonus-only.
+- Bonus-only rule: `bonusOnly = essentialsBonusOnly OR nativeBonus`, exception: `markdown-negotiation-vary` stays Essential-pool. `essentialsExcluded=true` checks leave all pools.
+- Per-domain ground truth beats static flags: use Ora `essentials.checks[].{tier,bonus,fraction}` when present (harness stores them).
+- Scoring: `fraction = score/max_score`; `error ⇒ fraction 0, still eligible`; pools = equal-weight means ×80 / ×20; bonus `min(5, 0.25×Σ)`; score = `round(trunc0.1(E)+trunc0.1(R)+trunc0.1(B))`; store raw earned; **serialize `earned=round(raw,1)`**.
+- Issue order (observed): tier → access-signal set first (`agent-crawler-reachability`, `bot-detection`, `content-no-js`, `docs-auth-gate`, `redirect-hygiene`, `agent-friendly-404`, `ax-*`) → gain desc → native `estScoreGain` desc.
+- Gating is deterministic dependent-family N/A only (REST×8, GraphQL×6, MCP-subchecks×15, payments×6, ax-*). Detector checks never auto-N/A'd. Product-level relevance is advisory-only.
+- `/api/v1/report` parses real is-agentic payloads (strict zod, nullable score, tier enum incl `bonus`, details/recommendation nullable-but-required).
+- SSE uses REAL event names/order incl. two `scan_init` frames; wire = `data:` lines; no `layer_start` reliance. Stream endpoint starts scans when missing; `scan_archived` only after DB commit.
+- Markdown negotiation via `middleware.ts` rewrite → route handler (never `route.ts` beside `page.tsx`); `Vary: Accept` on both branches.
+- Catalog JSON vendored VERBATIM (real field names); drift check = `compare.ts check-catalog` command, not startup fetch.
+- Fetcher UA roster includes `ora-agent`.
+- Node ≥20; vitest everywhere; commit after every passing step.
 
 ---
 
-### Task 1: Monorepo scaffold + database schema
+### Task 1: Workspace scaffold + database schema
 
-**Files:**
-- Create: `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `docker-compose.yml`
-- Create: `apps/web/src/db/schema.ts`, `apps/web/src/db/index.ts`, `apps/web/drizzle.config.ts`
-- Test: `apps/web/src/db/schema.test.ts`
+**Files:** Create `pnpm-workspace.yaml`, `docker-compose.yml`, `apps/web/src/db/schema.ts`, `apps/web/src/db/index.ts`, `drizzle.config.ts` · Test `apps/web/src/db/schema.test.ts`
 
-**Interfaces:**
-- Produces: Drizzle tables `scans`, `checks`, `reports` (exact column names per spec §3); exported `db` client; `SCHEMA_VERSION = "1.20.1"`
+**Interfaces:** Produces Drizzle tables exactly per spec §3 — statuses enum contains `'gating'`; `checks` has `native_tier`, `essentials_tier` (enum `'required'|'recommended'|'emerging'`), `essentials_bonus_only`, `essentials_excluded`, `bonus`, `fraction`, `occurrences`; unique index `(scan_id, check_id)`; `reports.score` nullable; plus `reference_reports` table (id, host, payload jsonb, source text, fetched_at, scanned_at).
 
-- [ ] **Step 1: Scaffold workspace**
-
-```bash
-mkdir -p apps/web packages/scanner-core tools
-pnpm init && printf 'packages:\n  - apps/*\n  - packages/*\n' > pnpm-workspace.yaml
-```
-
-- [ ] **Step 2: docker-compose.yml for Postgres**
-
-```yaml
-services:
-  db:
-    image: postgres:16
-    environment: { POSTGRES_PASSWORD: local, POSTGRES_DB: agentic }
-    ports: ["5432:5432"]
-    volumes: [pgdata:/var/lib/postgresql/data]
-volumes: { pgdata: }
-```
-
-Run `docker compose up -d`.
-
-- [ ] **Step 3: Write failing schema test**
-
-```ts
-// apps/web/src/db/schema.test.ts
-import { describe, it, expect } from "vitest";
-import { scans, checks, reports } from "./schema";
-
-describe("schema", () => {
-  it("has lifecycle statuses on scans", () => {
-    const s = scans.status;
-    expect(s.enumValues).toContain("gating");
-    expect(s.enumValues).toContain("complete");
-  });
-  it("checks carries essentials mapping columns", () => {
-    expect(checks.essentialsTier.name).toBe("essentials_tier");
-    expect(checks.fraction.name).toBe("fraction");
-    expect(checks.occurrences.name).toBe("occurrences");
-  });
-  it("reports.score is nullable", () => {
-    expect(reports.score.notNull).toBeFalsy();
-  });
-});
-```
-
-- [ ] **Step 4: Run test → FAIL (no schema module)**
-
-- [ ] **Step 5: Implement `schema.ts`** with drizzle-pg tables exactly matching spec §3 (statuses enum arrays; numerics as `numeric`; `checks.fraction numeric NOT NULL DEFAULT '0'`; `occurrences integer NOT NULL DEFAULT 1`; unique index `(scan_id, check_id, occurrences)`).
-
-- [ ] **Step 6: Run test → PASS** · `pnpm drizzle-kit push`
-
-- [ ] **Step 7: Commit** `feat: workspace scaffold + postgres schema`
+- [ ] Step 1: Scaffold workspace files + `docker compose up -d`
+- [ ] Step 2: Write failing schema test asserting the columns above
+- [ ] Step 3: Run → FAIL
+- [ ] Step 4: Implement schema; `pnpm drizzle-kit push`
+- [ ] Step 5: PASS · Commit `feat: scaffold + postgres schema`
 
 ---
 
-### Task 2: Contracts — zod schemas + pinned catalog
+### Task 2: Contracts — real-shaped zod schemas + verbatim catalog
 
-**Files:**
-- Create: `packages/scanner-core/src/schema.ts`, `packages/scanner-core/src/catalog.json`
-- Test: `packages/scanner-core/src/schema.test.ts`
-- Fixture: `packages/scanner-core/test/fixtures/real-report-vercel.json` (captured from `GET https://is-agentic.com/api/v1/report?url=https%3A%2F%2Fvercel.com`)
+**Files:** Create `packages/scanner-core/src/schema.ts`, `src/catalog.json` (verbatim vendored Ora catalog) · Test `schema.test.ts` · Fixtures `test/fixtures/real-report-{vercel,eve}.json`, `ora-checks.json`, `sse-fresh.txt`
 
-**Interfaces:**
-- Produces: zod schemas + inferred types: `PublicScanReport`, `Issue`, `ProblemDetails`, `ScanEvent` (discriminated union on `type`: `kind_detecting|kind_detected|scan_init|layer_start|check_start|check_complete|layer_complete|relevance_assessed|summary_ready|scan_complete|scan_archived|error`), `CheckCatalogEntry`, `assertCatalogVersion(cat)`
-- Consumes: nothing (leaf)
-
-- [ ] **Step 1: Capture fixtures**
-
-```bash
-mkdir -p packages/scanner-core/test/fixtures
-curl -s "https://is-agentic.com/api/v1/report?url=https%3A%2F%2Fvercel.com" > packages/scanner-core/test/fixtures/real-report-vercel.json
-curl -s "https://is-agentic.com/api/v1/report?url=https%3A%2F%2Feve.dev"   > packages/scanner-core/test/fixtures/real-report-eve.json
-curl -s "https://ora.ai/api/checks?include=essentials" > packages/scanner-core/test/fixtures/ora-checks.json
-```
-
-- [ ] **Step 2: Failing test — real payload parses**
+**Interfaces:** Produces `PublicScanReport` (strict; nullable score; issues[].tier enum `'essential'|'recommended'|'bonus'`; details/recommendation `.nullable()` but required keys), `ProblemDetails` (`additionalProperties:true`, `code` enum of 6 values), `ScanEvent` union with EXACT payload shapes:
 
 ```ts
-import PublicScanReportFixture from "./fixtures/real-report-vercel.json";
-it("parses the real tool's report verbatim", () => {
-  const r = PublicScanReport.parse(PublicScanReportFixture);
-  expect(r.score_breakdown.essential.available).toBe(80);
-});
-it("rejects unknown top-level fields", () => {
-  expect(PublicScanReport.safeParse({ ...PublicScanReportFixture, extra: 1 }).success).toBe(false);
-});
+check_start   {layerId,layerName,checkId,checkName,mcpKind:null,mcpUrl:null,timestamp}
+check_complete{...same ids, status:'pass'|'fail'|'warning'|'na'|'error',
+               score:number,maxScore:number,details:string}
+scan_init     {layerMaxScores:{discovery,accessibility,usability,payments},
+               checkRoster:[{id,name,layerId,maxScore,bonus?}],totalChecks?,staticOnly?}
+relevance_assessed {naCheckIds:string[],reasons:Record<string,string>,score?:number,grade?:string}
+summary_ready {agenticSummary:string}
+scan_complete {result:{/* native object */}}
+kind_detected {kind,hint?} · kind_detecting{} · layer_complete{layerId,layerName}
+discovery_phase{step,label,stepIndex,totalSteps} · scan_archived{reportUrl?} · error{message}
 ```
 
-- [ ] **Step 3: Run → FAIL**
+Also: `assertCatalogVersion(cat)` reading real `contractVersion` field.
 
-- [ ] **Step 4: Implement schemas** — mirror the real shape exactly: `strictObject` at top level; fields `target, display_target, report_url, score (nullable number), score_label, scanned_at, eligible_checks, score_breakdown{essential{earned,available,passing,total}, recommended{…}, bonus{points,positive_signals}}, issues[{id,name,tier('essential'|'recommended'|'bonus'),result('failed'|'partial'),details,recommendation}]`. `ScanEvent` union per Global Constraints. Export `catalogSchema` with `essentialsTier/essentialsBonusOnly/essentialsExcluded/nativeTier/maxScore/bonus/description` and `assertCatalogVersion(v){ if(v!=="1.20.1") throw … }`.
-
-- [ ] **Step 5: Vendor catalog** — copy fixture JSON minus volatile fields into `src/catalog.json`; add startup unit test calling `assertCatalogVersion`.
-
-- [ ] **Step 6: Run → PASS** · **Commit** `feat: zod contracts + pinned 124-check catalog`
+- [ ] Step 1: Capture fixtures (curl commands listed in appendix A)
+- [ ] Step 2: Failing tests: real report parses; unknown top-level key rejected; every frame line of `sse-fresh.txt` parses into `ScanEvent`
+- [ ] Step 3–5: Implement → PASS → Commit `feat: contracts`
 
 ---
 
 ### Task 3: Fetcher
 
-**Files:**
-- Create: `packages/scanner-core/src/fetcher.ts`
-- Test: `packages/scanner-core/src/fetcher.test.ts`
+**Files:** `packages/scanner-core/src/fetcher.ts` · Test `fetcher.test.ts`
 
-**Interfaces:**
-- Produces: `fetchAs(url: string, o: { ua?: "browser"|"GPTBot"|"ClaudeBot"|"ChatGPT-User"|"PerplexityBot"|"Google-Extended"|"DeepSeekBot"; accept?: string; timeoutMs?: number }): Promise<FetchedResponse>` where `FetchedResponse = { status:number; headers:Record<string,string>; body:string; finalUrl:string }`
-- Consumes: `undici`
+**Interfaces:** `fetchAs(url,{ua?,accept?,timeoutMs?}) → {status,headers,body,finalUrl}`; UA roster: browser default + `GPTBot, ChatGPT-User, ClaudeBot, PerplexityBot, Google-Extended, DeepSeekBot, ora-agent`. Never throws on status codes.
 
-- [ ] **Step 1: Failing tests** using a local `http.createServer` fixture server started in `beforeAll`: (a) default UA sends a browser-like header; (b) `ua:"GPTBot"` sends `user-agent: GPTBot`; (c) `accept:"text/markdown"` forwards header; (d) non-2xx returned as data, not thrown; (e) 5s timeout aborts.
-
-- [ ] **Step 2: Run → FAIL**
-
-- [ ] **Step 3: Implement** with `undici.request`; never throw on status; capture `content-type` lowercased into headers map.
-
-- [ ] **Step 4: PASS** · **Commit** `feat: multi-UA fetcher`
+- [ ] Failing fixture-server tests (UA sent, accept forwarded, status-as-data, timeout) → implement → pass → commit `feat: fetcher`
 
 ---
 
-### Task 4: Probe framework + HTTP-semantics probes
+### Task 4: Probe framework + harness + HTTP-semantics probes
 
-**Files:**
-- Create: `packages/scanner-core/src/probes/types.ts`, `src/probes/http-semantics.ts`
-- Test: `src/probes/http-semantics.test.ts`
+**Files:** `src/probes/types.ts`, `src/probes/http-semantics.ts`, `test/utils/fixtureServer.ts`, `test/utils/recorder.ts` · Tests `http-semantics.test.ts`
 
 **Interfaces:**
-- Produces: `interface Probe { id: CheckId; layer: Layer; run(ctx: ProbeContext): Promise<ProbeResult | ProbeResult[]> }`, `ProbeContext = { url: URL; fetch: typeof fetchAs; catalog: CheckCatalogEntry[] }`, `ProbeResult = { status:"pass"|"fail"|"warning"|"error"; score:number; max_score:number; details:string; recommendation?:string }`. Concrete exports: `agentFriendly404Probe`, `redirectHygieneProbe`.
-- Consumes: fetcher, catalog ids
-
-- [ ] **Step 1: Failing tests** against fixture server:
 
 ```ts
-// soft-404: server returns 200 + HTML shell for unknown path
-it("fails soft-404 shells", async () => {
-  const r = await agentFriendly404Probe.run(ctx("http://localhost:PORT"));
-  expect(r.status).toBe("fail");
-  expect(r.details).toMatch(/HTTP 200/);
-});
-// real 404 with recovery links ⇒ warning(partial); plain 404 ⇒ pass
-// 401/403 on fake path ⇒ warning with observed status in details
-// redirect chain >2 hops for http→https ⇒ redirect-hygiene warning
+type ProbeResult = { id: CheckId; status:'pass'|'fail'|'warning'|'error';
+                     score:number; max_score:number;
+                     details:string; recommendation?:string };
+interface Probe  { ids: CheckId[]; layer: Layer;
+                   run(ctx: ProbeContext): Promise<ProbeResult[]> };
+type ProbeContext = { url: URL;
+                      fetch: typeof fetchAs;
+                      surface: ScanContext };
+type ScanContext = { homepage?: FetchedResponse;      // set by content probes
+                     openapi?: FetchedResponse|null;  // set by openapi probe
+                     mcpManifest?: FetchedResponse|null;
+                     restSurface:boolean; graphqlSurface:boolean;
+                     commerceSignals:boolean };       // detectors write these
 ```
 
-- [ ] **Step 2: FAIL → implement → PASS** (probe requests `${url}/nonexistent-probe-${Date.now()}`).
+Concrete: `agentFriendly404Probe.ids=['agent-friendly-404']`, `redirectHygieneProbe.ids=['redirect-hygiene']`.
 
-- [ ] **Step 3: Commit** `feat: probe framework + http-semantics`
+Rubric table:
 
----
+| Check | Condition | score/max |
+|---|---|---|
+| agent-friendly-404 | fake path → 200 HTML shell | 0/2 fail, evidence quotes status+CT |
+| | 404/410 with links in body | 2/2 pass |
+| | 404/410 bare body | 1/2 warning |
+| | other status (401/403…) | 1/2 warning, status quoted |
+| redirect-hygiene | ≤2 hops to https | 1/1 pass |
+| | >2 hops or http loop | 0/1 fail |
 
-### Tasks 5–8: Remaining probe families (same pattern as Task 4)
-
-Each family = one task, identical step rhythm: failing fixture-server tests → implement → pass → commit. Fixtures: static files served by the test server (harvest real bad pages during research into `test/fixtures/sites/`).
-
-**Task 5 — Content & metadata probes** (`src/probes/content.ts`)
-`content-no-js` (raw HTML char count ≥500 ∧ h1 ∧ heading depth≥2 else warning/fail), `metadata-completeness` (canonical/lang/og:image/og:type — 4 signals, warning if 3), `json-ld` (+`json-ld-entity-linking` sameAs), `org-schema-completeness`, `trust-anchors` (/about,/contact,/privacy each ≥500 chars text).
-
-**Task 6 — Discovery-file probes** (`src/probes/discovery.ts`)
-`llms-txt-exists`, `llms-txt-formatting`, `sitemap`, `robots-agent-user-policy`, `robots-ai-policy-quality` (per-crawler directives), `agent-instruction` (llms.txt/agent.txt/agents.md with when-to-use section), `markdown-negotiation-vary` (send Accept: text/markdown; require markdown CT + `Vary` containing `accept`), `agent-crawler-reachability`+`bot-detection` (UA matrix from fetcher).
-
-**Task 7 — Developer/API probes** (`src/probes/api.ts`)
-`openapi-spec` (/openapi.json,/api/openapi.yaml parse), `scoped-permissions` (securitySchemes scopes or RFC9728), `response-schema-coverage` (%ops typed responses; threshold 0.6), `rate-limit-headers`, `json-error-responses` (probe a wrong-method request → JSON body), `public-api`/`public-api-docs`/`developer-portal` (link/path heuristics), `oauth-support` (/.well-known/oauth-authorization-server), `api-schema-analysis`+`function-calling-compat` (operationId/description coverage), `sandbox-environment` (docs signal search), `auth-md-exists`.
-
-**Task 8 — MCP + payments-presence probes** (`src/probes/mcp.ts`)
-`mcp-well-known-discovery` (/.well-known/mcp JSON validity), `mcp-server` (initialize handshake over Streamable HTTP; auth challenge ⇒ warning), `mcp-server-card`, payments presence (`x402-support`,`acp-support`,`ucp-support`,`ap2-support`,`mpp-support` — link/header/text detection only), `a2a-agent-card`.
-
-Every probe MUST have ≥2 fixture tests (one failing site, one passing site) and evidence strings naming observations.
-
-Shared harness (built once in Task 4, reused verbatim by 5–8): `test/utils/fixtureServer.ts` — http server from a route map `{path: {status, headers, body}}`; `test/utils/recorder.ts` — `record(url)` saves real fetched responses into `fixtures/sites/<host>/` so new probe fixtures are one command.
+- [ ] Failing tests (fixture server routes from table) → implement → pass → commit `feat: probe framework`
 
 ---
 
-### Task 9: Relevance gating
+### Tasks 5–8: Probe families (each at Task 4 detail level: rubric table + ≥2 fixture tests per check + evidence strings)
 
-**Files:**
-- Create: `packages/scanner-core/src/relevance.ts`
-- Test: `src/relevance.test.ts`
+**Task 5 — Content & metadata** (`src/probes/content.ts`)
+Checks & rubrics:
+
+| check | requests | rubric highlights |
+|---|---|---|
+| content-no-js | homepage raw | ≥500 chars ∧ h1 ∧ depth≥2 ⇒ 3/3; ≥500∧h1 flat ⇒ 2/3 warn; <500 ∨ no h1 ⇒ 0/3 fail (evidence: char count) |
+| metadata-completeness | homepage head | 4 signals ⇒ 2/2; 3 ⇒ 1/2 warn (name missing one); ≤2 ⇒ 0/2 |
+| json-ld | homepage scripts[type=application/ld+json] parse | valid identity type w/ name,url ⇒ 4/4; parse-ok wrong-type ⇒ 2/4; none ⇒ 0/4 |
+| json-ld-entity-linking | sameAs present | 2/0/… binary ± partial |
+| org-schema-completeness | Organization node fields | contactPoint∧address 2/2; one 1/2 |
+| trust-anchors | /about,/contact,/privacy text≥500 each | 2/2 all; 2-of-3 1/2 warn |
+
+Writes `surface.homepage`. Sets estGain ordering input.
+
+**Task 6 — Discovery files** (`src/probes/discovery.ts`)
+llms-txt-exists (1pt), llms-txt-formatting (2pt: H1+link list), sitemap (2/1/0 by valid XML), sitemap-lastmod(bonus), robots-agent-user-policy (2pt explicit AI directives), robots-ai-policy-quality (2pt per-crawler allow/disallow), agent-instruction (3pt: file found 1 + when-to-use section 2), markdown-negotiation-vary (markdown CT 1/2 + Vary Accept 2/2; sets Vary finding verbatim), agent-crawler-reachability + bot-detection (per-UA matrix; any hard-block 0/2, soft degrade 1/2).
+
+**Task 7 — Developer/API** (`src/probes/api.ts`)
+openapi-spec (7pt: found+parses; records `ctx.openapi`), scoped-permissions (5pt rubric: named scopes in securitySchemes 5; schemes-no-scopes 2/5 warn; none 0), response-schema-coverage (2pt: pct>60 full, >30 half), rate-limit-headers (2pt live header observed), json-error-responses (4pt: wrong-method probe returns application/json problem body), public-api (7)/public-api-docs(3)/developer-portal(6) path+link heuristics with partial credit per signal found, oauth-support (5: well-known OAuth server responds), api-schema-analysis (2) + function-calling-compat (2: operationId/description coverage ratios), sandbox-environment (2: docs signals), auth-md-exists (2).
+
+**Task 8 — MCP + payments presence** (`src/probes/mcp.ts`)
+mcp-well-known-discovery (bonus 2: manifest JSON validity), mcp-server (6pt: handshake initialize OK Streamable 6/6; auth challenge 3/6 warn; invalid manifest 1/6; absent handled by gating), mcp-server-card (2 bonus), payments presence family (mpp/x402/ucp/acp/acp-delegate/ap2 — link/header/text detection; 2–3pt each, bonus-flagged per catalog), a2a-agent-card (2 bonus).
+
+---
+
+### Task 9: Relevance gating — deterministic families ONLY
+
+**Files:** `packages/scanner-core/src/relevance.ts` · Test `relevance.test.ts`
+
+**Interfaces:** `applyRelevance(results: ProbeResult[], ctx: ScanContext): { gated: GatedCheck[], assessed: {naCheckIds,reasons} }`; `GatedCheck = ProbeResult & { eligible:boolean; na_reason?:string }`.
+
+Dependent-family table (data-driven):
+
+| Family | N/A iff | na_reason template |
+|---|---|---|
+| REST-dependent ×8 (`json-error-responses`,`rate-limit-headers`,`response-schema-coverage`,`api-schema-analysis`,`function-calling-compat`,`rest-sdk-packages`,`pagination-shape`,`api-versioning-policy`) | `!ctx.restSurface` (openapi absent ∧ no REST evidence) | "No REST API surface detected on this domain" |
+| GraphQL ×6 | `!ctx.graphqlSurface` | "No GraphQL surface detected" |
+| MCP sub-checks ×15 (tool-descriptions, param-schemas, …) | `!ctx.mcpManifest` | "No MCP server detected" |
+| Payments ×6 | `!ctx.commerceSignals` | "No commerce signals detected" |
+| ax-* | homepage unfetchable | "No server HTML available" |
+
+Hard rule encoded in test: detector checks (`openapi-spec`,`mcp-server`,`public-api`,`oauth-support`,`scoped-permissions`,`json-error-responses` where REST exists…) are never N/A'd here — they fail normally.
+
+- [ ] Table-driven tests: marketing context excludes exactly the REST/GraphQL/MCP/payments sets; API site excludes none; unreachable-homepage cascades page-dependent checks. Commit `feat: relevance gating`
+
+---
+
+### Task 10: Scorer
+
+**Files:** `packages/scanner-core/src/scorer.ts` · Test `scorer.test.ts` · Fixtures `test/fixtures/golden/{vercel,eve,meta}-essentials.json` (transcribed from Ora `essentials.checks[]`: `{id,tier,bonus,fraction,nativeEstGain}`)
 
 **Interfaces:**
-- Produces: `applyRelevance(checks: ResultedCheck[], ctx: ScanContext): { gated: GatedCheck[], naReasons: Record<CheckId,string> }` — emits `relevance_assessed` payload shape `{naCheckIds, reasons}`
-- Types (defined here, consumed by Task 10+): `ResultedCheck = { check_id: CheckId; layer: Layer; status:'pass'|'fail'|'warning'|'error'; score:number; max_score:number }`; `GatedCheck = ResultedCheck & { eligible:boolean; na_reason?:string }`
-- Rules table (from naReason corpus): no homepage fetchable ⇒ cascade N/A for page-dependent checks; no OpenAPI found ⇒ N/A api-family; no MCP detected ⇒ N/A mcp-runtime family; marketing site (no dev-surface evidence) ⇒ N/A api/oauth/dev-portal family. Table lives in `relevance.ts` as data, reviewed against `ora.ai` naReason strings in fixtures.
-
-- [ ] Tests: marketing-site context excludes ≥10 api checks with reasons; api-enabled site excludes none of them; unreachable-homepage cascades page-dependent set. **Commit** `feat: relevance gating`
-
----
-
-### Task 10: Scorer (golden-tested against the real tool)
-
-**Files:**
-- Create: `packages/scanner-core/src/scorer.ts`
-- Test: `src/scorer.test.ts`, fixture `test/fixtures/golden/*.json` (per-check results transcribed from Ora `?include=essentials` payloads for vercel/eve/meta)
-
-**Interfaces:**
-- Produces: `scoreReport(gated: GatedCheck[], catalog): RawScore` and `serializeReport(raw): PublicScanReport`
 
 ```ts
-// exact rules (Global Constraints)
-const mean = a => a.length ? a.reduce((s,x)=>s+x,0)/a.length : 0;
-E = 80*mean(fractions(essential, nonBonusOnly)); R = 20*mean(fractions(recommended, nonBonusOnly));
-B = Math.min(5, .25*sum(fractions(bonusOnly))); positive_signals = bonusOnly.filter(f=>f>0).length;
-score = Math.round(trunc1(E)+trunc1(R)+trunc1(B));   // trunc1 = Math.trunc(x*10)/10
-serialize: earned = round(raw,1); issues sorted Essential→Recommended then fraction asc;
-grade bands: 95/86/70/48/28; label bands per spec §4.
+type RawScore = { essentialRaw:number; recommendedRaw:number; bonusRaw:number;
+                  passing:{essential:number;recommended:number};
+                  totals:{essential:number;recommended:number};
+                  bonusSignals:number; eligibleChecks:number; score:number;
+                  grade:string; label:string };
+scoreReport(checks: GatedCheck[], catalog): RawScore
+serializeReport(raw: RawScore, meta:{target,displayTarget,reportUrl,scannedAt},
+                issues: Issue[]): PublicScanReport
+estGains(raw, checks): Map<CheckId,number>  // re-score per failed check flipped to pass
 ```
 
-- [ ] Golden tests: vercel fixture → `{earned 63.5/80, 16.8/20, bonus 5}` score 85; eve → 55; meta → 32. Property test: setting any N/A check's values must not change output. Disambiguation test asserting trunc-sum rule vs floor-sum on eve.dev numbers. **Commit** `feat: validated scorer`
+Pool selection helper (encodes Blocker-1/2 rules):
+
+```ts
+const bonusOnly = c => (c.essentials_bonus_only || c.nativeBonus)
+                        && c.check_id !== 'markdown-negotiation-vary';
+const pool = t => gated.filter(c => !c.na_reason && c.essentials_excluded!==true
+                                     && !bonusOnly(c) && c.essentials_tier===t);
+E = 80*mean(pool('required').map(fraction));
+R = 20*mean(pool('recommended').map(fraction));
+B = Math.min(5, .25*sum(fractions(bonusOnly checks with fraction>0)));
+score = Math.round(trunc1(E)+trunc1(R)+trunc1(B));
+label = lookupLabel(score);            // data table src/labels.json, filled from snapshots
+grade = bands 95/86/70/48/28 else F;
+```
+
+- [ ] Golden: vercel → E63.5/R16.8/B5/score85 · eve → 55 · meta → 32 (using essentials.checks ground truth fixtures)
+- [ ] Property: flipping any N/A check values never changes output
+- [ ] Serialization: eve recommended earned prints 10.2 (round, not trunc)
+- [ ] Commit `feat: validated scorer`
 
 ---
 
 ### Task 11: Engine orchestrator
 
-**Files:**
-- Create: `packages/scanner-core/src/engine.ts`
-- Test: `src/engine.test.ts`
+**Files:** `packages/scanner-core/src/engine.ts` · Test `engine.test.ts`
 
-**Interfaces:**
-- Produces: `runScan(url: string, opts?): AsyncGenerator<ScanEvent>` — event order: `kind_detecting → kind_detected → scan_init(roster subset + layerMaxScores + totalChecks) → layer_start/discovery_phase… → per check: check_start → check_complete → layer_complete → relevance_assessed → summary_ready → scan_complete(result provisional) → scan_archived`. Terminal `report` accessor via `opts.onComplete` callback (post-gating score).
-- Consumes: probes registry, relevance, scorer
+**Interfaces:** `runScan(url, opts:{onComplete:(report)=>Promise<void>}) : AsyncGenerator<ScanEvent>` — emits EXACT fresh-scan order (Global Constraints), including both `scan_init` frames; `opts.onComplete` persists BEFORE the engine yields final `scan_archived` (official CLI then finds the report within its 5-poll window). Dead-host ⇒ `error` terminal.
 
-- [ ] Integration test: fixture server with known-good site; assert exact event sequence, 4 `layer_complete`, terminal score equals direct scorer call. Error-path test: dead host → `error` event. **Commit** `feat: scan engine`
+- [ ] Sequence test vs recorded fixture order; persistence-ordering test (fake clock). Commit `feat: engine`
 
 ---
 
 ### Task 12: Job runner + REST API
 
-**Files:**
-- Create: `apps/web/lib/jobs.ts`, `apps/web/app/api/scan/route.ts`, `app/api/v1/report/route.ts`, `app/api/report/full/route.ts`, `app/api/v1/checks/route.ts`
-- Test: `apps/web/lib/jobs.test.ts`, `app/api/__tests__/routes.test.ts`
+**Files:** `apps/web/lib/jobs.ts`, `app/api/scan/route.ts`, `app/api/v1/report/route.ts`, `app/api/report/full/route.ts`, `app/api/v1/checks/route.ts` · Tests alongside
 
-**Interfaces:**
-- Produces: `startScan(target, source)` (dedupe-collapse on running host), `getLatestComplete(host)`, bus `subscribe(scanId, fn)`; engine-level failures retry ≤2 on transient network errors then mark scan `failed`; routes return problem+json errors (`invalid_url`, `report_not_found`) with `type,title,status,detail,instance,code,resolution`.
+**Interfaces:** `startScan(target,source)` dedupe-collapse; runner wires bus↔ring-buffer↔DB; retries ≤2 transient; `prev_scan_id` linked at insert; problem+json errors with 6-value code enum.
 
-- [ ] Tests: POST /api/scan 202 shape; second POST while running returns same URL; GET report 404 before completion, PublicScanReport-valid JSON after; normalization: `"eve.dev"` ≡ `"https://eve.dev"`. **Commit** `feat: job runner + rest api`
+- [ ] Route contract tests incl. normalization (`eve.dev ≡ https://eve.dev`), 404 shape, 202 shape. Commit `feat: jobs + rest`
 
 ---
 
-### Task 13: SSE route + Markdown negotiation
+### Task 13: SSE stream + middleware markdown
 
-**Files:**
-- Create: `apps/web/app/api/scan/stream/route.ts`, `apps/web/app/scan/[host]/route.ts` (markdown branch), middleware for `Vary`
-- Test: `stream.test.ts`
+**Files:** `app/api/scan/stream/route.ts`, `middleware.ts`, `app/api/scan/markdown/route.ts` · Test `stream.test.ts`
 
-**Interfaces:**
-- Produces: GET stream modes — live attach (bus), replay (buffered events from DB), cache-hit (`kind_detected → scan_complete{servedFromCache:true,resultAgeSeconds} → scan_archived`). Markdown branch renders compact report, sets `Content-Type: text/markdown; charset=utf-8` + `Vary: Accept`.
+**Behavior:** target missing ⇒ call `startScan(target,'cli')` then stream; running ⇒ attach bus + ring buffer replay; complete+fresh ⇒ cache-hit triple. Middleware: `Accept` includes `text/markdown` ∧ path=/scan/* ⇒ rewrite to `/api/scan/markdown?host=`; add `Vary: Accept` on both branches.
 
-- [ ] Tests: live sequence matches engine events; replay fast-forwards; cache-hit triple; curl-level Vary assertion. **Commit** `feat: sse + markdown negotiation`
+- [ ] Tests: three modes; official-CLI simulation script (report→stream→poll like the 591-line reference). Commit `feat: sse + markdown`
 
 ---
 
-### Task 14: Web UI — Home + Report
+### Task 14: Web UI
 
-**Files:**
-- Create: `apps/web/app/page.tsx`, `app/scan/[host]/page.tsx` (+ `ProgressView.tsx`, `FindingsList.tsx`, `RosterTable.tsx`, `useScanStream.ts` hook), `app/docs/page.tsx`, `app/methodology/page.tsx`
-- Test: Playwright `e2e/scan.spec.ts`
+**Files:** `app/page.tsx`, `app/scan/[host]/page.tsx` (+`ProgressView`,`FindingsList`,`RosterTable`,`useScanStream`), `app/docs/page.tsx` (integration guide), `app/methodology/page.tsx` (formula+roster+labels) · Playwright `e2e/scan.spec.ts`
 
-**Interfaces:**
-- Consumes: contracts types; `useScanStream(host)` → `{events, phase, done, report}`; hydrate-from-DB-first then attach stream; reconnect w/ backoff.
-
-- [ ] E2E: submit flow → progress bar counts up → auto-transition; completed host loads instantly; stale chip appears when snapshot_at forced old (fixture row); Copy-fix-prompt writes clipboard containing failed findings. Component tests for FindingsList ordering (estGain desc within groups). **Commit** `feat: web ui`
+- [ ] E2E: hero flow; instant completed load; stale chip (>6h fixture row) + manual Rescan button; Copy-fix-prompt clipboard content. Component test: FindingsList order (access-signal first, then estGain desc). Commit `feat: ui`
 
 ---
 
 ### Task 15: Comparison harness
 
-**Files:**
-- Create: `tools/compare.ts`, `apps/web/src/db/reference.ts` (`reference_reports` table)
-- Test: `tools/compare.test.ts`
+**Files:** `tools/compare.ts` (commands: `fetch`, `diff`, `reproject`, `cli-diff`, `check-catalog`, `labels`) · Test `compare.test.ts`
 
-**Interfaces:**
-- Produces: CLI `tsx tools/compare.ts fetch <host>` (stores Ora `?include=essentials` snapshot; cache-first, ≤20 reads), `tools/compare.ts diff <host>` → per-check table (theirs vs ours: fraction/status/tier/na + eligible symmetric difference + advisory flags for `brand-search-accuracy`,`agentic-search-specific`,`wikipedia-presence`), `reproject` mode (Ora fractions restricted to our roster → our scorer must equal our score), `cli-diff <host>` (runs `IS_AGENTIC_API_ORIGIN=http://localhost:3000 npx is-agentic <host>`, structural diff vs real run saved under `reference/cli/`).
-
-- [ ] Tests: golden diff on vercel fixture pair (known deltas only from unimplemented roster); reproject equality property. **Commit** `feat: comparison harness`
+- [ ] fetch: Ora `?include=essentials&format=audit` snapshot → `reference_reports`; cache-first ≤20 reads/session
+- [ ] diff: per-check theirs/ours (fraction,status,tier,na) + eligible symmetric difference + advisory flags for `brand-search-accuracy`,`agentic-search-specific`,`wikipedia-presence` + product-level relevance differences marked advisory
+- [ ] reproject: their fractions restricted to our roster through our scorer == our score
+- [ ] cli-diff: structural diff of official CLI output against localhost vs real
+- [ ] labels: fill `labels.json` F-band from accumulated snapshots
+- [ ] Commit `feat: comparison harness`
 
 ---
 
 ### Task 16: Live validation milestone
 
-- [ ] Pick 5 domains used in research; run ours + official tool; record outputs in `docs/validation/2026-MM-DD-run.md` (per-check diff summary, reproject equality, CLI structural diff)
-- [ ] Exit criteria met: overlapping-eligible fractions match; reproject scores match exactly; official CLI renders ours indistinguishably modulo values
-- [ ] Commit `docs: first live validation run`
+- [ ] Run 5 research domains through ours + official tool → `docs/validation/run-01.md` (per-check diff, reproject equality, CLI structural diff, scanned_at gaps)
+- [ ] Exit criteria: overlapping fractions match; reproject equality exact; CLI renders ours indistinguishably modulo values; all divergences explained (advisory-listed)
+- [ ] Commit `docs: validation run 01`
+
+## Appendix A — Fixture capture commands
+
+```bash
+mkdir -p packages/scanner-core/test/fixtures
+curl -s "https://is-agentic.com/api/v1/report?url=https%3A%2F%2Fvercel.com" > packages/scanner-core/test/fixtures/real-report-vercel.json
+curl -s "https://is-agentic.com/api/v1/report?url=https%3A%2F%2Feve.dev"    > packages/scanner-core/test/fixtures/real-report-eve.json
+curl -s "https://is-agentic.com/api/v1/report?url=https%3A%2F%2Fmeta.ai"    > packages/scanner-core/test/fixtures/real-report-meta.json
+curl -s "https://ora.ai/api/checks?include=essentials" > packages/scanner-core/test/fixtures/ora-checks.json
+curl -s "https://ora.ai/api/score/vercel.com?include=essentials" > packages/scanner-core/test/fixtures/golden/vercel-essentials.json
+curl -s "https://ora.ai/api/score/eve.dev?include=essentials"    > packages/scanner-core/test/fixtures/golden/eve-essentials.json
+curl -s "https://ora.ai/api/score/meta.ai?include=essentials"    > packages/scanner-core/test/fixtures/golden/meta-essentials.json
+# fresh SSE capture (starts a real scan):
+curl -sN "https://is-agentic.com/api/scan/stream?target=https%3A%2F%2Fexample.net" > packages/scanner-core/test/fixtures/sse-fresh.txt
+```
