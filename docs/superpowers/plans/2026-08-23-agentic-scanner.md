@@ -6,7 +6,7 @@
 
 **Architecture:** Next.js monolith (`apps/web`) + pure-TS `packages/scanner-core` engine; Postgres (local Docker) via Drizzle; comparison harness in `tools/`.
 
-**Tech Stack:** TypeScript · Next.js App Router · Drizzle/Postgres · zod · vitest · undici · Playwright.
+**Tech Stack:** TypeScript · Next.js 15 (App Router; pinned — `middleware.ts` deprecated in Next 16's `proxy.ts`) · Drizzle/Postgres · zod · vitest · undici · Playwright.
 
 **Spec:** `docs/superpowers/specs/2026-08-23-agentic-scanner-ux-design.md` (rev 3)
 
@@ -19,7 +19,7 @@
 - Issue order (observed): tier → access-signal set first (`agent-crawler-reachability`, `bot-detection`, `content-no-js`, `docs-auth-gate`, `redirect-hygiene`, `agent-friendly-404`, `ax-*`) → gain desc → native `estScoreGain` desc.
 - Gating is deterministic dependent-family N/A only (REST×8, GraphQL×6, MCP-subchecks×15, payments×6, ax-*). Detector checks never auto-N/A'd. Product-level relevance is advisory-only.
 - `/api/v1/report` parses real is-agentic payloads (strict zod, nullable score, tier enum incl `bonus`, details/recommendation nullable-but-required).
-- SSE uses REAL event names/order incl. two `scan_init` frames; wire = `data:` lines; no `layer_start` reliance. Stream endpoint starts scans when missing; `scan_archived` only after DB commit.
+- Canonical frame order (single source of truth): `kind_detecting → kind_detected → scan_init{roster} → discovery_phase×8 → scan_init{totalChecks,staticOnly:true} → (check_start→check_complete)×N → layer_complete×4 → scan_complete{provisional native score} → relevance_assessed{final essentials score+grade} → summary_ready → scan_archived`. Wire = `data:` lines only; `layer_start` kept in union but never emitted. Stream endpoint starts scans when missing; `scan_archived` only after DB commit.
 - Markdown negotiation via `middleware.ts` rewrite → route handler (never `route.ts` beside `page.tsx`); `Vary: Accept` on both branches.
 - Catalog JSON vendored VERBATIM (real field names); drift check = `compare.ts check-catalog` command, not startup fetch.
 - Fetcher UA roster includes `ora-agent`.
@@ -127,20 +127,21 @@ Checks & rubrics:
 | content-no-js | homepage raw | ≥500 chars ∧ h1 ∧ depth≥2 ⇒ 3/3; ≥500∧h1 flat ⇒ 2/3 warn; <500 ∨ no h1 ⇒ 0/3 fail (evidence: char count) |
 | metadata-completeness | homepage head | 4 signals ⇒ 2/2; 3 ⇒ 1/2 warn (name missing one); ≤2 ⇒ 0/2 |
 | json-ld | homepage scripts[type=application/ld+json] parse | valid identity type w/ name,url ⇒ 4/4; parse-ok wrong-type ⇒ 2/4; none ⇒ 0/4 |
-| json-ld-entity-linking | sameAs present | 2/0/… binary ± partial |
+| json-ld-entity-linking | sameAs array ≥1 valid URL on identity node | 2/2 present; 0/2 absent |
 | org-schema-completeness | Organization node fields | contactPoint∧address 2/2; one 1/2 |
 | trust-anchors | /about,/contact,/privacy text≥500 each | 2/2 all; 2-of-3 1/2 warn |
+| docs-auth-gate | probe /docs + 2 doc-like paths for 401/403/login redirects | all public 1/1 pass; any auth wall 0/1 fail (evidence quotes status); unreachable homepage ⇒ N/A via gating |
 
 Writes `surface.homepage`. Sets estGain ordering input.
 
 **Task 6 — Discovery files** (`src/probes/discovery.ts`)
-llms-txt-exists (1pt), llms-txt-formatting (2pt: H1+link list), sitemap (2/1/0 by valid XML), sitemap-lastmod(bonus), robots-agent-user-policy (2pt explicit AI directives), robots-ai-policy-quality (2pt per-crawler allow/disallow), agent-instruction (3pt: file found 1 + when-to-use section 2), markdown-negotiation-vary (markdown CT 1/2 + Vary Accept 2/2; sets Vary finding verbatim), agent-crawler-reachability + bot-detection (per-UA matrix; any hard-block 0/2, soft degrade 1/2).
+llms-txt-exists (1pt), llms-txt-formatting (2pt: H1+link list), sitemap (2/1/0 by valid XML), sitemap-lastmod(bonus), robots-agent-user-policy (2pt explicit AI directives), robots-ai-policy-quality (2pt per-crawler allow/disallow), agent-instruction (3pt: file found 1 + when-to-use section 2), markdown-negotiation-vary (max 1: markdown CT ∧ Vary Accept ⇒ 1/1 else 0/1; evidence quotes observed Vary), agent-crawler-reachability + bot-detection (per-UA matrix; any hard-block 0/2, soft degrade 1/2).
 
 **Task 7 — Developer/API** (`src/probes/api.ts`)
 openapi-spec (7pt: found+parses; records `ctx.openapi`), scoped-permissions (5pt rubric: named scopes in securitySchemes 5; schemes-no-scopes 2/5 warn; none 0), response-schema-coverage (2pt: pct>60 full, >30 half), rate-limit-headers (2pt live header observed), json-error-responses (4pt: wrong-method probe returns application/json problem body), public-api (7)/public-api-docs(3)/developer-portal(6) path+link heuristics with partial credit per signal found, oauth-support (5: well-known OAuth server responds), api-schema-analysis (2) + function-calling-compat (2: operationId/description coverage ratios), sandbox-environment (2: docs signals), auth-md-exists (2).
 
 **Task 8 — MCP + payments presence** (`src/probes/mcp.ts`)
-mcp-well-known-discovery (bonus 2: manifest JSON validity), mcp-server (6pt: handshake initialize OK Streamable 6/6; auth challenge 3/6 warn; invalid manifest 1/6; absent handled by gating), mcp-server-card (2 bonus), payments presence family (mpp/x402/ucp/acp/acp-delegate/ap2 — link/header/text detection; 2–3pt each, bonus-flagged per catalog), a2a-agent-card (2 bonus).
+mcp-well-known-discovery (bonus 2: manifest JSON validity), mcp-server (6pt: handshake initialize OK Streamable 6/6; auth challenge 3/6 warn; invalid manifest 1/6; absent handled by gating), mcp-server-card (2 bonus), payments presence family (`mpp-support`,`x402-support`,`ucp-support`,`acp-support`,`acp-delegate-payment`,`ap2-support` — link/header/text detection; 2–3pt each, bonus-flagged per catalog), a2a-agent-card (2 bonus).
 
 ---
 
@@ -150,16 +151,21 @@ mcp-well-known-discovery (bonus 2: manifest JSON validity), mcp-server (6pt: han
 
 **Interfaces:** `applyRelevance(results: ProbeResult[], ctx: ScanContext): { gated: GatedCheck[], assessed: {naCheckIds,reasons} }`; `GatedCheck = ProbeResult & { eligible:boolean; na_reason?:string }`.
 
-Dependent-family table (data-driven):
+Dependent-family table (data-driven; validated against vercel/eve/meta observed N/A sets):
 
-| Family | N/A iff | na_reason template |
+| Family / check | Eligible iff | na_reason template |
 |---|---|---|
-| REST-dependent ×8 (`json-error-responses`,`rate-limit-headers`,`response-schema-coverage`,`api-schema-analysis`,`function-calling-compat`,`rest-sdk-packages`,`pagination-shape`,`api-versioning-policy`) | `!ctx.restSurface` (openapi absent ∧ no REST evidence) | "No REST API surface detected on this domain" |
-| GraphQL ×6 | `!ctx.graphqlSurface` | "No GraphQL surface detected" |
-| MCP sub-checks ×15 (tool-descriptions, param-schemas, …) | `!ctx.mcpManifest` | "No MCP server detected" |
-| Payments ×6 | `!ctx.commerceSignals` | "No commerce signals detected" |
-| ax-* | homepage unfetchable | "No server HTML available" |
+| `api-error-model`, `api-versioning-policy`, `pagination-shape`, `async-job-pattern`, `response-schema-coverage` | parsed OpenAPI present | "No REST API surface detected on this domain" |
+| `json-error-responses`, `rate-limit-headers`, `function-calling-compat`, `rest-sdk-packages`, `api-schema-analysis` | always eligible once REST-or-docs evidence exists (scored on docs when API auth-gated) | — never auto-N/A |
+| GraphQL ×6 (`graphql-*`) | graphql surface evidence | "No GraphQL surface detected" |
+| MCP sub-checks ×15 (`mcp-tool-*`,`mcp-param-schemas`,`mcp-resource-*`,`mcp-view-*`,`mcp-apps-ui-quality`,`mcp-auth-mechanism`,`mcp-oauth-metadata`,`mcp-pkce-s256`,`mcp-error-handling`,`mcp-transport-modern`) | unauthenticated initialize handshake succeeded (auth-gated ⇒ N/A even if server live) | "MCP server requires authentication" / "No MCP server detected" |
+| payments ×6 (`*-support`,`acp-delegate-payment`) | commerce signals found | "No commerce signals detected" |
+| `ax-*` family | homepage fetched with HTML | "No server HTML available" / below-bonus-threshold |
+| `docs-auth-gate`, `redirect-hygiene` | homepage reachable | homepage-unreachable cascade reason |
 
+naReason strings are transcribed from SSE raw-object captures (`relevance_assessed.reasons`),
+NOT from the score API (which omits them). Harness treats Ora's per-domain
+`essentials.checks` membership as eligibility ground truth in diffs.
 Hard rule encoded in test: detector checks (`openapi-spec`,`mcp-server`,`public-api`,`oauth-support`,`scoped-permissions`,`json-error-responses` where REST exists…) are never N/A'd here — they fail normally.
 
 - [ ] Table-driven tests: marketing context excludes exactly the REST/GraphQL/MCP/payments sets; API site excludes none; unreachable-homepage cascades page-dependent checks. Commit `feat: relevance gating`
@@ -168,7 +174,7 @@ Hard rule encoded in test: detector checks (`openapi-spec`,`mcp-server`,`public-
 
 ### Task 10: Scorer
 
-**Files:** `packages/scanner-core/src/scorer.ts` · Test `scorer.test.ts` · Fixtures `test/fixtures/golden/{vercel,eve,meta}-essentials.json` (transcribed from Ora `essentials.checks[]`: `{id,tier,bonus,fraction,nativeEstGain}`)
+**Files:** `packages/scanner-core/src/scorer.ts` · Test `scorer.test.ts` · Fixtures `test/fixtures/golden/{vercel,eve,meta}-essentials.json` (Ora `essentials.checks` is a MAP keyed by check id (no id field); gain field is `essentialsGain`; N/A checks are ABSENT from it — flip-test needs native `layers[].checks[]`)
 
 **Interfaces:**
 
@@ -181,6 +187,8 @@ type RawScore = { essentialRaw:number; recommendedRaw:number; bonusRaw:number;
 scoreReport(checks: GatedCheck[], catalog): RawScore
 serializeReport(raw: RawScore, meta:{target,displayTarget,reportUrl,scannedAt},
                 issues: Issue[]): PublicScanReport
+// issues[].tier serialization map: essentialsTier 'required'→'essential',
+// 'recommended'→'recommended'; bonus-only checks never appear as issues
 estGains(raw, checks): Map<CheckId,number>  // re-score per failed check flipped to pass
 ```
 
@@ -220,7 +228,7 @@ grade = bands 95/86/70/48/28 else F;
 
 **Files:** `apps/web/lib/jobs.ts`, `app/api/scan/route.ts`, `app/api/v1/report/route.ts`, `app/api/report/full/route.ts`, `app/api/v1/checks/route.ts` · Tests alongside
 
-**Interfaces:** `startScan(target,source)` dedupe-collapse; runner wires bus↔ring-buffer↔DB; retries ≤2 transient; `prev_scan_id` linked at insert; problem+json errors with 6-value code enum.
+**Interfaces:** `startScan(target,source)` dedupe-collapse; runner wires bus↔ring-buffer↔DB; retries ≤2 transient; `prev_scan_id` linked at insert; problem+json errors; code enum: invalid_url · report_not_found · scan_failed · scan_start_failed · scan_interrupted · rate_limit_exceeded.
 
 - [ ] Route contract tests incl. normalization (`eve.dev ≡ https://eve.dev`), 404 shape, 202 shape. Commit `feat: jobs + rest`
 

@@ -73,7 +73,7 @@ scans
 checks
   id uuid PK · scan_id uuid → scans (index) · check_id text
   layer text · native_tier text        -- Ora 'required|recommended|emerging'
-  essentials_tier text                 -- 'essential'|'recommended'|null  (Ora mapping)
+  essentials_tier text                 -- 'required'|'recommended'|null  (Ora mapping)
   essentials_bonus_only boolean · essentials_excluded boolean
   bonus boolean · occurrences int default 1   -- MCP-kind duplicates averaged
   status text ('pass'|'fail'|'warning'|'na'|'error')
@@ -126,7 +126,7 @@ checks with `essentialsTier === 'required'`; `emerging` ⇒ bonus-only.
 fraction      = score / max_score            (per eligible non-excluded check)
 error         ⇒ fraction 0, stays eligible
 passing       = count(fraction == 1)
-Essential     = 80 × mean(fraction | essentials_tier='essential', not bonus_only)
+Essential     = 80 × mean(fraction | essentials_tier='required', not bonus_only)
 Recommended   = 20 × mean(fraction | essentials_tier='recommended', not bonus_only)
 Bonus         = min(5, 0.25 × Σ fraction | essentials_bonus_only=true, fraction>0)
 positive_signals = count(bonus_only ∧ fraction>0)
@@ -250,6 +250,10 @@ reports through the OFFICIAL CLI renderer — the primary side-by-side harness.
 
 ---
 
+
+
+**Canonical frame order (authoritative, applies everywhere):**
+`kind_detecting → kind_detected → scan_init{roster} → discovery_phase×8 → scan_init{totalChecks,staticOnly:true} → (check_start→check_complete)×N → layer_complete×4 → scan_complete{provisional} → relevance_assessed{final score,grade} → summary_ready → scan_archived`.
 ## 8. Error Handling
 
 - Probe throws → `status='error'`, fraction 0, **stays eligible**, evidence
