@@ -57,7 +57,7 @@ describe("contracts", () => {
   it("rejects malformed SSE frames per event type", () => {
     expect(() => parseSseData('data: {"type":"check_complete","checkId":"x"}')).toThrow(); // missing required fields
     expect(() => parseSseData('data: {"type":"error","nope":1}')).toThrow();
-    // unknown upstream types pass through the guard (last union member)
-    expect(parseSseData('data: {"type":"some_future_event","x":1}')).toBeDefined();
+    // unknown upstream types fail closed
+    expect(() => parseSseData('data: {"type":"some_future_event","x":1}')).toThrow();
   });
 });

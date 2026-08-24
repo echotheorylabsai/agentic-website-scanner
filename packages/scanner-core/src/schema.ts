@@ -79,55 +79,48 @@ export type ProblemDetails = z.infer<typeof problemDetails>;
 // was never observed — kept in union, never emitted.
 // ---------------------------------------------------------------------------
 
-const frame = <T extends z.ZodRawShape>(shape: T) =>
-  z.object({ type: z.string(), ...shape }).passthrough();
-
-export const scanEvent = z.union([
-  z.object({ type: z.literal("kind_detecting"), timestamp: z.number().optional() }).passthrough(),
-  z.object({ type: z.literal("kind_detected"), kind: z.string(), hint: z.string().optional(), timestamp: z.number().optional() }).passthrough(),
-  z.object({
-    type: z.literal("scan_init"),
+const eventShapes = {
+  kind_detecting: z.object({ timestamp: z.number().optional() }).passthrough(),
+  kind_detected: z.object({ kind: z.string(), hint: z.string().optional(), timestamp: z.number().optional() }).passthrough(),
+  scan_init: z.object({
     // first frame carries roster+layer max scores; second carries totals
     layerMaxScores: z.record(z.string(), z.number()).optional(),
     checkRoster: z.array(z.object({ id: z.string(), name: z.string(), layerId: z.string(), maxScore: z.number(), bonus: z.boolean().optional() })).optional(),
     totalChecks: z.number().optional(),
     staticOnly: z.boolean().optional(),
   }).passthrough(),
-  z.object({ type: z.literal("discovery_phase"), step: z.string().optional(), label: z.string().optional(), stepIndex: z.number().optional(), totalSteps: z.number().optional(), timestamp: z.number().optional() }).passthrough(), // late post-scan frames carry only {type,step}
-  z.object({ type: z.literal("check_start"), layerId: z.string(), layerName: z.string(), checkId: z.string(), checkName: z.string(), mcpKind: z.null().optional(), mcpUrl: z.null().optional(), timestamp: z.number().optional() }).passthrough(),
-  z.object({ type: z.literal("check_complete"), layerId: z.string(), layerName: z.string(), checkId: z.string(), checkName: z.string(), status: z.enum(["pass", "fail", "warning", "na", "error"]), score: z.number(), maxScore: z.number(), details: z.string(), bonus: z.boolean().optional(), mcpKind: z.null().optional(), mcpUrl: z.null().optional(), timestamp: z.number().optional() }).passthrough(),
-  z.object({ type: z.literal("layer_start") }).passthrough(),
-  z.object({ type: z.literal("layer_complete"), layerId: z.string(), layerName: z.string() }).passthrough(),
-  z.object({ type: z.literal("relevance_assessed"), naCheckIds: z.array(z.string()), reasons: z.record(z.string(), z.string()), score: z.number().optional(), grade: z.string().optional() }).passthrough(),
-  z.object({ type: z.literal("summary_ready"), agenticSummary: z.string() }).passthrough(),
-  z.object({ type: z.literal("scan_complete"), result: z.unknown() }).passthrough(),
-  z.object({ type: z.literal("scan_archived") }).passthrough(),
-  z.object({ type: z.literal("error"), message: z.string() }).passthrough(),
-  frame({}), // pass-through guard for unknown upstream event types — MUST stay last
-]);
+  discovery_phase: z.object({ step: z.string().optional(), label: z.string().optional(), stepIndex: z.number().optional(), totalSteps: z.number().optional(), timestamp: z.number().optional() }).passthrough(), // late post-scan frames carry only {type,step}
+  layer_start: z.object({}).passthrough(),
+  check_start: z.object({ layerId: z.string(), layerName: z.string(), checkId: z.string(), checkName: z.string(), mcpKind: z.null().optional(), mcpUrl: z.null().optional(), timestamp: z.number().optional() }).passthrough(),
+  check_complete: z.object({ layerId: z.string(), layerName: z.string(), checkId: z.string(), checkName: z.string(), status: z.enum(["pass", "fail", "warning", "na", "error"]), score: z.number(), maxScore: z.number(), details: z.string(), bonus: z.boolean().optional(), mcpKind: z.null().optional(), mcpUrl: z.null().optional(), timestamp: z.number().optional() }).passthrough(),
+  layer_complete: z.object({ layerId: z.string(), layerName: z.string() }).passthrough(),
+  relevance_assessed: z.object({ naCheckIds: z.array(z.string()), reasons: z.record(z.string(), z.string()), score: z.number().optional(), grade: z.string().optional() }).passthrough(),
+  summary_ready: z.object({ agenticSummary: z.string() }).passthrough(),
+  scan_complete: z.object({ result: z.unknown() }).passthrough(),
+  scan_archived: z.object({}).passthrough(),
+  error: z.object({ message: z.string() }).passthrough(),
+} as const;
 
-export type ScanEvent = z.infer<typeof scanEvent>;
-export type ScanEventName = ScanEvent["event"];
+const eventMembers = Object.entries(eventShapes).map(([type, shape]) =>
+  z.object({ type: z.literal(type as never) }).passthrough().and(shape),
+) as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]];
 
-const KNOWN_EVENT_TYPES = new Set([
-  "kind_detecting", "kind_detected", "scan_init", "discovery_phase",
-  "layer_start", "check_start", "check_complete", "layer_complete",
-  "relevance_assessed", "summary_ready", "scan_complete", "scan_archived", "error",
-]);
+export const scanEvent = z.union(eventMembers);
+
+export type ScanEvent = { type: string } & Record<string, unknown>;
+export type ScanEventName = keyof typeof eventShapes;
 
 /** Parse an SSE wire frame ("data: {...}") into a typed ScanEvent.
- * Known event types are validated STRICTLY against their shape;
- * unknown upstream types pass through the permissive guard. */
+ * Known event types are validated STRICTLY against their exact shape;
+ * unknown upstream types are rejected (fail-closed by design). */
 export function parseSseData(line: string): ScanEvent {
   const payload = line.startsWith("data:") ? line.slice(5).trim() : line;
   const raw = JSON.parse(payload);
-  if (raw && typeof raw === "object" && typeof raw.type === "string" && KNOWN_EVENT_TYPES.has(raw.type)) {
-    const strict = scanEvent.parse(raw) as ScanEvent;
-    if ((strict as { type: string }).type === raw.type) return strict;
-    // matched the wrong (permissive) member ⇒ shape violation
-    throw new Error(`Malformed frame for known event type ${raw.type}`);
+  const t = raw && typeof raw === "object" ? (raw as { type?: unknown }).type : undefined;
+  if (typeof t === "string" && t in eventShapes) {
+    return { ...eventShapes[t as keyof typeof eventShapes].parse(raw), type: t } as ScanEvent;
   }
-  return scanEvent.parse(raw) as ScanEvent;
+  throw new Error(`Unknown SSE event type: ${String(t)}`);
 }
 
 export function eventName(e: ScanEvent): string { return e.type; }
