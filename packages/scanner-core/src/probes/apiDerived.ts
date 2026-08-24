@@ -22,7 +22,7 @@ export class FunctionCallingCompatProbe implements Probe {
   async run({ ctx }: ProbeContext): Promise<ProbeResult[]> {
     if (!ctx.restSurface) return [result(this.ids[0], "na", 0, 2, "No OpenAPI spec found - function-calling compatibility check not applicable.")];
     const s = specText(ctx);
-    const ops = (s.match(/(?:get|post|put|patch|delete)\s*:\s*\{/g) ?? []).length;
+    const ops = (s.match(/"?(?:get|post|put|patch|delete)"?\s*:\s*\{/g) ?? []).length;
     const described = (s.match(/"?description"?\s*:/g) ?? []).length;
     const ratio = ops === 0 ? 0 : described / ops;
     if (ratio >= 1.5) return [result(this.ids[0], "pass", 2, 2, `Operations richly described (${ops} ops, ${described} descriptions) — LLM function-calling ready.`)];
@@ -60,7 +60,7 @@ export class CliToolProbe implements Probe {
   layer = "usability" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
     const home = await fetchAs(url, { accept: "text/html" }).catch(() => null);
-    const npm = await fetchAs(`https://registry.npmjs.org/${url.hostname.replace(/^www\./, "").split(".")[0]}`).catch(() => null);
+    const npm = await fetchAs(`https://registry.npmjs.org/${url.hostname.replace(/^www\./, "").split(".")[0]}`, { timeoutMs: 8000 }).catch(() => null);
     const cliOnSite = home && /\bnpx\s+\S|npm\s+install\s+-g|brew\s+install/i.test(home.body);
     if (npm?.status === 200 && /"bin"\s*:/.test(npm.body)) {
       return [result(this.ids[0], "pass", 3, 3, "Published CLI package found on npm with a bin entry.")];
@@ -125,11 +125,11 @@ export class AsyncJobPatternProbe implements Probe {
 export class RestSdkPackagesProbe implements Probe {
   ids = ["rest-sdk-packages"] as const; // bonus-only
   layer = "usability" as const;
-  async run({ ctx, url }: ProbeContext): Promise<ProbeResult[]> {
+  async run({ ctx, url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
     if (!ctx.restSurface) return [result(this.ids[0], "error", 0, 3, "No OpenAPI spec found - SDK packages check not applicable.")];
     const name = url.hostname.replace(/^www\./, "").split(".")[0];
-    const npm = await fetch(`${`https://registry.npmjs.org/@${name}/sdk`}`).then((r) => r.ok).catch(() => false);
-    const pypi = await fetch(`https://pypi.org/pypi/${name}/json`).then((r) => r.ok).catch(() => false);
+    const npm = await fetchAs(`https://registry.npmjs.org/@${name}/sdk`, { timeoutMs: 8000 }).then((r) => r.status < 300).catch(() => false);
+    const pypi = await fetchAs(`https://pypi.org/pypi/${name}/json`, { timeoutMs: 8000 }).then((r) => r.status < 300).catch(() => false);
     const n = Number(npm) + Number(pypi);
     if (n >= 2) return [result(this.ids[0], "pass", 3, 3, "Official SDKs published to npm and PyPI.")];
     if (n === 1) return [result(this.ids[0], "warning", 1, 3, "One official SDK registry package found.")];

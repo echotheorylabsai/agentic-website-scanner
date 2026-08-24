@@ -48,9 +48,15 @@ export function joinCatalogFlags(checks: GatedCheck[], catalog: Catalog): Scored
   const byId = new Map(catalog.checks.map((c) => [c.id, c]));
   return checks.map((c) => {
     const cat = byId.get(c.id);
+    // Unknown ids default to excluded-from-pools (never silently Recommended)
     const tier = cat?.essentialsTier ?? "recommended";
-    const bonusOnly = Boolean(cat && ((cat.essentialsBonusOnly ?? false) || (cat.bonus ?? false)) && c.id !== "markdown-negotiation-vary");
-    return { ...c, essentials_tier: tier, essentials_bonus_only: bonusOnly };
+    const bonusOnly = cat
+      ? Boolean(((cat.essentialsBonusOnly ?? false) || (cat.bonus ?? false)) && c.id !== "markdown-negotiation-vary")
+      : true;
+    const excluded = cat?.essentialsExcluded === true;
+    return excluded
+      ? { ...c, eligible: false, status: "na" as const, na_reason: c.na_reason ?? "Excluded from essentials scoring", essentials_tier: tier, essentials_bonus_only: bonusOnly }
+      : { ...c, essentials_tier: tier, essentials_bonus_only: bonusOnly };
   });
 }
 
@@ -85,4 +91,100 @@ export function scoreReport(checks: ScoredCheck[], labels?: Record<string, strin
     grade: gradeFor(score),
     label: labels?.[String(score)] ?? null,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Serialization (plan Task 10)
+// ---------------------------------------------------------------------------
+
+export interface SerializeMeta {
+  target: string;
+  displayTarget: string;
+  reportUrl: string;
+  scannedAt: string; // ISO
+}
+
+/** issues[].tier serialization map: 'required'→'essential'; bonus-only never appear. */
+const ISSUE_TIER: Record<string, "essential" | "recommended"> = {
+  required: "essential",
+  recommended: "recommended",
+};
+
+const ACCESS_SIGNAL_FIRST = new Set([
+  "agent-crawler-reachability", "bot-detection", "content-no-js", "docs-auth-gate",
+  "redirect-hygiene", "agent-friendly-404",
+]);
+
+function issueOrderKey(c: ScoredCheck, gains: Map<string, number>): [number, number, number] {
+  const tierRank = c.essentials_tier === "required" ? 0 : 1;
+  const accessRank = ACCESS_SIGNAL_FIRST.has(c.id) || c.id.startsWith("ax-") ? 0 : 1;
+  const gain = -(gains.get(c.id) ?? 0);
+  return [tierRank, accessRank, gain];
+}
+
+/** Build the PublicScanReport from a scored scan (round(raw,1) serialization). */
+export function serializeReport(
+  raw: RawScore,
+  checks: ScoredCheck[],
+  meta: SerializeMeta,
+): {
+  target: string; display_target: string; report_url: string;
+  score: number; score_label: string | null; scanned_at: string;
+  eligible_checks: number;
+  score_breakdown: {
+    essential: { earned: number; available: number; passing: number; total: number };
+    recommended: { earned: number; available: number; passing: number; total: number };
+    bonus: { points: number; positive_signals: number };
+  };
+  issues: Array<{ id: string; name: string; tier: string; result: "failed" | "partial"; details: string | null; recommendation: string | null }>;
+} {
+  void checks;
+  return {
+    target: meta.target,
+    display_target: meta.displayTarget,
+    report_url: meta.reportUrl,
+    score: raw.score,
+    score_label: raw.label,
+    scanned_at: meta.scannedAt,
+    eligible_checks: raw.eligibleChecks,
+    score_breakdown: {
+      essential: { earned: round1(raw.essentialRaw), available: 80, passing: raw.passing.essential, total: raw.totals.essential },
+      recommended: { earned: round1(raw.recommendedRaw), available: 20, passing: raw.passing.recommended, total: raw.totals.recommended },
+      bonus: { points: Math.round(round1(raw.bonusRaw)), positive_signals: raw.bonusSignals },
+    },
+    issues: [],
+  };
+}
+
+const round1 = (n: number): number => Math.round(n * 10) / 10;
+
+/**
+ * estGains — for each failed eligible non-bonus check, the score if that check
+ * were flipped to a full pass. Used for FindingsList ordering (gain desc).
+ */
+export function estGains(checks: ScoredCheck[]): { gains: Map<string, number>; issues: Array<{ id: string; name: string; tier: string; result: "failed" | "partial"; details: string | null; recommendation: string | null }> } {
+  const base = scoreReport(checks).score;
+  const gains = new Map<string, number>();
+  for (const c of checks) {
+    if (!c.eligible || c.essentials_bonus_only) continue;
+    if (c.status === "pass" || c.status === "na") continue;
+    if (c.max_score === 0 || c.score >= c.max_score) continue;
+    const flipped = checks.map((x) => x === c ? { ...x, status: "pass" as const, score: x.max_score } : x);
+    gains.set(c.id, scoreReport(flipped).score - base);
+  }
+  const issues = checks
+    .filter((c) => c.eligible && !c.essentials_bonus_only && c.status !== "pass" && c.status !== "na")
+    .sort((a, b) => {
+      const ka = issueOrderKey(a, gains); const kb = issueOrderKey(b, gains);
+      for (let i = 0; i < 3; i++) if (ka[i] !== kb[i]) return ka[i] - kb[i];
+      return 0;
+    })
+    .map((c) => ({
+      id: c.id, name: c.id, // engine joins catalog names upstream
+      tier: ISSUE_TIER[c.essentials_tier] ?? "recommended",
+      result: (c.status === "fail" || c.status === "error" ? "failed" : "partial") as "failed" | "partial",
+      details: c.details ?? null,
+      recommendation: c.recommendation ?? null,
+    }));
+  return { gains, issues };
 }

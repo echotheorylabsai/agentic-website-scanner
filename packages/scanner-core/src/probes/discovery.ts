@@ -114,7 +114,7 @@ export class MarkdownNegotiationVaryProbe implements Probe {
     const r = await fetchAs(url, { accept: "text/markdown" });
     const ct = (r.headers["content-type"] ?? "").toLowerCase();
     const vary = r.headers["vary"];
-    const isMd = ct.includes("text/markdown") || ct.includes("text/plain");
+    const isMd = ct.includes("text/markdown");
     if (isMd && vary && /accept/i.test(vary)) {
       return [result(this.ids[0], "pass", 1, 1, `Markdown negotiation works: Accept: text/markdown → ${ct}; Vary: ${vary}`)];
     }
@@ -129,15 +129,15 @@ export class AgentCrawlerReachabilityProbe implements Probe {
   layer = "accessibility" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
     const blocked: string[] = [];
-    const ok: string[] = [];
+    let okCount = 0;
     for (const ua of ["gptbot", "claudebot", "perplexitybot"] as const) {
       try {
         const r = await fetchAs(url, { ua });
-        if ([401, 403, 406, 429].includes(r.status) && !ok.length) blocked.push(`${ua}→${r.status}`);
-        else ok.push(ua);
+        if ([401, 403, 406, 429].includes(r.status)) blocked.push(`${ua}→${r.status}`);
+        else okCount++;
       } catch { blocked.push(`${ua}→network`); }
     }
-    if (blocked.length && !ok.length) return [result(this.ids[0], "fail", 0, 2, `AI crawlers hard-blocked: ${blocked.join(", ")}.`)];
+    if (!okCount) return [result(this.ids[0], "fail", 0, 2, `AI crawlers hard-blocked: ${blocked.join(", ")}.`)];
     if (blocked.length) return [result(this.ids[0], "warning", 1, 2, `Some AI crawlers degraded: ${blocked.join(", ")}.`)];
     return [result(this.ids[0], "pass", 2, 2, "All probed AI crawlers reach the homepage.")];
   }

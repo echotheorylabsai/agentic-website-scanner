@@ -77,6 +77,7 @@ export class JsonErrorResponsesProbe implements Probe {
       const res = await fetch(`${url.origin}/api`, {
         method: "DELETE",
         headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(10_000),
       });
       const ct = (res.headers.get("content-type") ?? "").toLowerCase();
       const body = await res.text();

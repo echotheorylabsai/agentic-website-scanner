@@ -12,7 +12,7 @@ export interface FixtureServer {
 export function startFixtureServer(routes: Record<string, Route>): Promise<FixtureServer> {
   const server = createServer((req, res) => {
     const u = new URL(req.url ?? "/", "http://x");
-    const route = routes[u.pathname];
+    const route = routes[u.pathname] ?? routes["*"];
     if (!route) { res.statusCode = 404; res.end(); return; }
     route(req, res, u);
   });

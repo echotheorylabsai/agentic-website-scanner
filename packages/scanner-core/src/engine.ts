@@ -5,13 +5,13 @@ import { newScanContext } from "./probes/types.js";
 import type { ProbeResult, Probe } from "./probes/types.js";
 import { contentProbes } from "./probes/content.js";
 import { discoveryProbes } from "./probes/discovery.js";
-import { OpenApiSpecProbe, PublicApiProbe, JsonErrorResponsesProbe, ResponseSchemaCoverageProbe } from "./probes/api.js";
+import { OpenApiSpecProbe, PublicApiProbe, JsonErrorResponsesProbe, ResponseSchemaCoverageProbe, ScopedPermissionsProbe, OAuthSupportProbe, RateLimitHeadersProbe, PublicApiDocsProbe, DeveloperPortalProbe } from "./probes/api.js";
 import {
   ApiSchemaAnalysisProbe, FunctionCallingCompatProbe, SandboxEnvironmentProbe,
   AuthMdExistsProbe, CliToolProbe, ApiErrorModelProbe, ApiVersioningPolicyProbe,
   PaginationShapeProbe, AsyncJobPatternProbe, RestSdkPackagesProbe,
 } from "./probes/apiDerived.js";
-import { McpWellKnownDiscoveryProbe, McpServerProbe } from "./probes/mcp.js";
+import { mcpProbes, McpWellKnownDiscoveryProbe, McpServerProbe } from "./probes/mcp.js";
 import { AgentFriendly404Probe, RedirectHygieneProbe } from "./probes/http-semantics.js";
 import { applyRelevance } from "./relevance.js";
 import type { GatedCheck } from "./relevance.js";
@@ -71,9 +71,30 @@ export async function* runScan(
 
   const results: ProbeResult[] = [];
 
+  // Dead host ⇒ terminal error frame (no scored report)
+  try {
+    await fetchAs(url, { timeoutMs: 10_000 });
+  } catch {
+    yield { type: "kind_detecting", timestamp: Date.now() };
+    yield { type: "kind_detected", kind: "domain", hint: "likely-domain", timestamp: Date.now() };
+    yield { type: "error", message: `Target unreachable: ${url.hostname}` };
+    return;
+  }
+
   yield { type: "kind_detecting", timestamp: Date.now() };
   yield { type: "kind_detected", kind: "domain", hint: "likely-domain", timestamp: Date.now() };
+
+  const phases = ["Fetching host", "Reading robots & sitemaps", "Crawling key pages", "Checking agent files",
+    "Probing API surface", "MCP handshake", "Payments signals", "Finalizing"];
+
   yield { type: "scan_init", layerMaxScores, checkRoster: roster };
+  phases.forEach((label, i) => {
+    void label; void i;
+  });
+  // capture truth: discovery_phase×8 between the two scan_init frames
+  for (let i = 0; i < phases.length; i++) {
+    yield { type: "discovery_phase", step: phases[i], label: phases[i], stepIndex: i + 1, totalSteps: phases.length };
+  }
   yield { type: "scan_init", totalChecks: roster.length, staticOnly: true };
 
   // Ordering contract:
@@ -146,7 +167,9 @@ export async function* runScan(
   };
 
   yield { type: "scan_complete", result: preGatingResult };
-  yield { type: "discovery_phase", step: "Assessing relevance" };
+  yield { type: "discovery_phase", step: "Assessing product relevance" };
+  yield { type: "discovery_phase", step: "Generating summary" };
+  yield { type: "discovery_phase", step: "Archiving report" };
   yield { type: "relevance_assessed", naCheckIds: assessed.naCheckIds, reasons: assessed.reasons, score: raw.score, grade: raw.grade };
   yield { type: "summary_ready", agenticSummary: buildSummary(scored, raw) };
 

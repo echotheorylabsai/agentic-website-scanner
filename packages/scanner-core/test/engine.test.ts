@@ -61,16 +61,19 @@ describe("engine", () => {
   });
 
   it("persists BEFORE emitting scan_archived", async () => {
-    let persistAt = -1; let archivedAt = -1; let i = 0;
-    for await (const ev of runScan(fx.base)) {
-      if (ev.type === "summary_ready") { /* onComplete fires after summary_ready */ }
-      i++;
-      void ev;
-      void persistAt; void archivedAt;
+    let persistedAtFrame: number | null = null;
+    const frames: string[] = [];
+    for await (const ev of runScan(fx.base, { onComplete: async () => { persistedAtFrame = frames.length; } })) {
+      frames.push(ev.type);
     }
-    void i;
-    // structural guarantee: onComplete is awaited before final yield
-    expect(true).toBe(true);
+    expect(persistedAtFrame).not.toBeNull();
+    expect(frames[frames.length - 1]).toBe("scan_archived");
+    expect(frames.indexOf("scan_archived")).toBeGreaterThan(persistedAtFrame!);
+    // dead host ⇒ terminal error, no scored report
+    const deadFrames: string[] = [];
+    for await (const ev of runScan("http://127.0.0.1:9")) deadFrames.push(ev.type);
+    expect(deadFrames[deadFrames.length - 1]).toBe("error");
+    expect(deadFrames).not.toContain("scan_complete");
   });
 });
 

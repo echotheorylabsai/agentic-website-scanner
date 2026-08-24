@@ -37,6 +37,13 @@ export class McpServerProbe implements Probe {
   ids = ["mcp-server"] as const; // 6pt — the Recommended-pool anchor
   layer = "usability" as const;
   async run({ url, fetchAs, ctx }: ProbeContext): Promise<ProbeResult[]> {
+    // manifest present but unparseable ⇒ observed meta.ai outcome: 2/6 warning
+    if (ctx.mcpManifest) {
+      try { JSON.parse(ctx.mcpManifest.body); } catch {
+        ctx.mcpHandshake = "none";
+        return [result(this.ids[0], "warning", 2, 6, "MCP manifest present but is not valid JSON — agents cannot discover tools from it.")];
+      }
+    }
     const endpoints = ["/mcp", "/api/mcp", "/.well-known/mcp"];
     for (const p of endpoints) {
       try {
@@ -47,6 +54,7 @@ export class McpServerProbe implements Probe {
             Accept: "application/json, text/event-stream",
           },
           body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "is-agentic-clone", version: "1.0" } } }),
+          signal: AbortSignal.timeout(10_000),
         });
         const body = await init.text();
         if (init.status === 401 || init.status === 403) {
@@ -96,11 +104,12 @@ function makePaymentsProbe(key: keyof typeof PAYMENT_IDS): Probe {
   class PaymentsProbeImpl implements Probe {
     ids = [id] as unknown as readonly [string];
     layer = "payments" as const;
-    async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
+    async run({ url, fetchAs, ctx }: ProbeContext): Promise<ProbeResult[]> {
       try {
         const home = await fetchAs(url, { accept: "text/html" });
         const wk = await fetchAs(`${url.origin}/.well-known/${key === "mpp" ? "payto" : key}`).catch(() => null);
         const hit = pattern.test(home?.body ?? "") || (wk ? wk.status < 300 : false);
+        if (hit) ctx.commerceSignals = true;
         return hit
           ? [result(id, "pass", max as number, max as number, `${id} signals detected on the site.`)]
           : [result(id, "fail", 0, max as number, `No ${id} evidence found.`)];
