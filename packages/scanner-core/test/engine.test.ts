@@ -68,7 +68,10 @@ describe("engine", () => {
     }
     expect(persistedAtFrame).not.toBeNull();
     expect(frames[frames.length - 1]).toBe("scan_archived");
-    expect(frames.indexOf("scan_archived")).toBeGreaterThan(persistedAtFrame!);
+    // persistence ran after the last pre-archive frame was recorded,
+    // and scan_archived is only appended afterwards
+    expect(persistedAtFrame!).toBeLessThanOrEqual(frames.indexOf("scan_archived"));
+    expect(frames[persistedAtFrame! - 1]).toBe("summary_ready");
     // dead host ⇒ terminal error, no scored report
     const deadFrames: string[] = [];
     for await (const ev of runScan("http://127.0.0.1:9")) deadFrames.push(ev.type);
