@@ -135,3 +135,39 @@ Business logic for every deterministic check is now either **byte-matched to obs
 - eve.dev label mismatch is the band discovery above — now fixed for future scans
 
 **Artifacts:** `artifacts/browser/` — 01-home.png, report-<domain>.png (+roster), official-<domain>.png
+
+---
+
+# Addendum 3: Final Text-Parity Audit (4 parallel agents, vercel.com)
+
+**Method:** 4 independent Opus-5 agents audited all 50 common checks: recommendations byte-equality, 31 evidence-text differences classified (semantic-equivalent / measurement-basis / factual-conflict), 14 status mismatches root-caused, live fact-checks against vercel.com.
+
+## Results
+
+| Dimension | Verdict |
+|---|---|
+| **Recommendations** | ✅ 50/50 byte-identical (by construction — catalog text; provenance verified) |
+| **Evidence (details)** | 21/31 semantic equivalents · 13 measurement-basis differences · **6 factual conflicts → ALL FIXED** |
+| **Status mismatches** | 14 root-caused: 6 payments (commerce-detector bug → fixed), 2 robots (display-only, faithful), 5 strictness residuals (documented), 1 cosmetic label |
+
+## Factual bugs found by the audit → all fixed
+
+1. **developer-portal**: login redirects scored as portal; "quickstart" read off login page → soft-404/auth-wall guard added
+2. **response-schema-coverage**: word-count regex produced 1098%→capped "~100%"; real 88% → proper JSON parsing, per-operation coverage
+3. **scoped-permissions**: prose word "scopes" (84 hits) credited → requires non-empty `scopes:{...}` or quoted tokens
+4. **function-calling-compat**: verb regex counted 650 ops (real: 397) → proper JSON paths parse; threshold aligned to Ora's observed rule (97% described ⇒ pass)
+5. **agent-instruction**: HTML app shell accepted as file → content-type/HTML guard (note: Ora credits HTML /agent.txt — their inconsistency, we stay factual)
+6. **json-error-responses**: "problem bodies" implied RFC 9457 → wording corrected
+7. **commerce detector**: `pricing` keyword alone matched vercel nav 34× → requires cart/checkout/protocol tokens
+8. **async-job-pattern**: bare `statusUrl` word passed → requires 202 + explicit poll contract
+
+## Post-fix vercel.com parity
+
+**37/42 overlap exact (88%)** — remaining 5 rows all documented residuals:
+- content-no-js (vercel serves markdown to AI UAs — UA-variant, changing would break JSON-LD checks)
+- agent-instruction (Ora credits HTML soft-404 file finds — their inconsistency)
+- scoped-permissions (Ora requires granularity beyond scopes+per-op-enforcement; spec genuinely has both)
+- org-schema-completeness (Ora wrong: live JSON-LD has full PostalAddress)
+- rest-sdk-packages (bonus-only, PyPI attribution difference)
+
+**Recommendation text: 50/50 byte-identical. Evidence text: factually true on all checks (live-verified).**

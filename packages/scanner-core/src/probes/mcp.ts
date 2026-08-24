@@ -36,7 +36,9 @@ export class CommerceSignalsDetector implements Probe {
   layer = "payments" as const;
   async run({ ctx }: ProbeContext): Promise<ProbeResult[]> {
     const body = ctx.homepage?.body ?? "";
-    if (/\bx402\b|\bucp\b|\bacp\b|\bap2\b|machine[- ]?and[- ]?agent[- ]?payments|checkout|cart\b|pricing\b|subscribe/i.test(body)) {
+    // "pricing" alone is too lenient (vercel.com nav has 34 "Pricing" hits but no
+    // agent-commerce) — require cart/checkout or an explicit agent-payment protocol
+    if (/\bx402\b|\bucp\b|\bacp\b|\bap2\b|machine[- ]?and[- ]?agent[- ]?payments|agent[- ]?payments|\bcheckout\b|add[- ]?to[- ]?cart/i.test(body)) {
       ctx.commerceSignals = true;
     }
     return [];

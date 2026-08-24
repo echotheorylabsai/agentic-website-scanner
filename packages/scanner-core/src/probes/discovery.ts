@@ -94,9 +94,11 @@ export class AgentInstructionProbe implements Probe {
   ids = ["agent-instruction"] as const;
   layer = "discovery" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
-    for (const p of ["/agents.md", "/AGENTS.md", "/agent.md", "/.well-known/agents.md", "/llms-full.txt"]) {
+    for (const p of ["/agents.md", "/AGENTS.md", "/agent.md", "/agent.txt", "/.well-known/agents.md", "/llms-full.txt"]) {
       const r = await fetchAs(`${url.origin}${p}`);
-      if (r.status < 300 && r.body.trim()) {
+      // soft-404 guard: HTML app shells are not instruction files (observed on vercel.com)
+      const isHtml = /<html|<!doctype/i.test(r.body) || (r.headers["content-type"] ?? "").includes("text/html");
+      if (r.status < 300 && r.body.trim() && !isHtml) {
         const whenToUse = /when\s+to\s+use|use\s+this\s+(?:site|page)|capabilities/i.test(r.body);
         return whenToUse
           ? [result(this.ids[0], "pass", 3, 3, `Agent instruction file at ${p} includes orientation guidance.`)]

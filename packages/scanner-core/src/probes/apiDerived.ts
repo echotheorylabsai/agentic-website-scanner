@@ -22,13 +22,28 @@ export class FunctionCallingCompatProbe implements Probe {
   async run({ ctx }: ProbeContext): Promise<ProbeResult[]> {
     if (!ctx.restSurface) return [result(this.ids[0], "fail", 0, 2, "No OpenAPI spec found - operations cannot be evaluated for LLM tool use.")];
     const s = specText(ctx);
-    // JSON: "get": { ... } · YAML: get: newline-indented block
-    const ops = (s.match(/"?(?:get|post|put|patch|delete)"?\s*:(?:\s*\{|\s*\n)/g) ?? []).length;
-    const opBlocks = s.split(/"?(?:get|post|put|patch|delete)"?\s*:(?:\s*\{|\s*\n)/).slice(1);
-    const described = opBlocks.filter((b) => /"?description"?\s*:/.test(b)).length;
+    // parse JSON spec properly — verb-keyword regex overcounts (650 vs 397 real ops on vercel)
+    let ops = 0, described = 0;
+    try {
+      const spec = JSON.parse(s);
+      for (const pathItem of Object.values(spec?.paths ?? {})) {
+        if (!pathItem || typeof pathItem !== "object") continue;
+        for (const [method, op] of Object.entries(pathItem as Record<string, any>)) {
+          if (!["get", "post", "put", "patch", "delete"].includes(method)) continue;
+          if (!op || typeof op !== "object") continue;
+          ops++;
+          if (op.summary || op.description) described++;
+        }
+      }
+    } catch {
+      const opBlocks = s.split(/"?(?:get|post|put|patch|delete)"?\s*:(?:\s*\{|\s*\n)/).slice(1);
+      ops = opBlocks.length;
+      described = opBlocks.filter((b) => /"?description"?\s*:/.test(b)).length;
+    }
     const ratio = ops === 0 ? 0 : described / ops;
-    if (ratio >= 1.5) return [result(this.ids[0], "pass", 2, 2, `Operations richly described (${ops} ops, ${described} descriptions) — LLM function-calling ready.`)];
-    if (ratio >= 0.8) return [result(this.ids[0], "warning", 1, 2, `Operation descriptions sparse (ratio ${ratio.toFixed(2)}) — add per-operation summaries for tool use.`)];
+    // Ora's observed rule: operationIds + typed schemas ⇒ pass at 97% described (vercel 2/2)
+    if (ratio >= 0.9) return [result(this.ids[0], "pass", 2, 2, `${ops} operations, ${Math.round(ratio * 100)}% with summaries/descriptions — LLM function-calling ready.`)];
+    if (ratio >= 0.6) return [result(this.ids[0], "warning", 1, 2, `Operation descriptions sparse (${Math.round(ratio * 100)}% of ${ops}) — add per-operation summaries for tool use.`)];
     return [result(this.ids[0], "fail", 0, 2, "Operations lack descriptions needed for LLM function calling.")];
   }
 }
@@ -126,7 +141,7 @@ export class AsyncJobPatternProbe implements Probe {
     const s = specText(ctx);
     const has202 = /"?202"?\s*:|\b202\b/.test(s);
     const pollVocab = /job|operation[-_ ]?(id|status)|polling|try\s+again\s+later|x-status/i.test(s);
-    const pollEndpoint = /"(Retry-After)"\s*:|(operations|jobs|tasks)\/\{|status[-_ ]?url|operation[-_ ]?location/i.test(s);
+    const pollEndpoint = /"(Retry-After)"\s*:|(operations|jobs|tasks)\/\{|operation[-_ ]?location|"job[-_ ]?id"\s*:/i.test(s);
     if (has202 && pollEndpoint) {
       return [result(this.ids[0], "pass", 2, 2, "Async job pattern documented (202 + status endpoint).")];
     }

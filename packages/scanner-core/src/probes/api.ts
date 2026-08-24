@@ -91,7 +91,7 @@ export class JsonErrorResponsesProbe implements Probe {
         if (res.status >= 400 && !isHtmlShell && best < 1) best = 1;
       }
       if (best === 4) {
-        return [result(this.ids[0], "pass", 4, 4, "Errors returned as JSON problem bodies.")];
+        return [result(this.ids[0], "pass", 4, 4, "API returns JSON error responses with error details.")];
       }
       if (best === 1) {
         return [result(this.ids[0], "warning", 1, 4, "Error statuses returned but bodies are not application/json.", "Return RFC 9457 problem+json bodies on API errors.")];
@@ -101,6 +101,10 @@ export class JsonErrorResponsesProbe implements Probe {
       return [result(this.ids[0], "error", 0, 4, ctx.restSurface ? "Network failure during error-probe." : "No API surface to probe for error contracts.")];
     }
   }
+}
+
+function stripTagsLen(html: string): number {
+  return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, "").length;
 }
 
 const DOC_SIGNALS: Array<[RegExp, string]> = [
@@ -152,8 +156,14 @@ export class DeveloperPortalProbe implements Probe {
     let score = 0; const seen: string[] = [];
     for (const p of ["/developers", "/dev", "/build", "/integrations", "/docs"]) {
       const r = await fetchAs(`${url.origin}${p}`, { accept: "text/html" });
-      if (r.status < 300) { score += 2; seen.push(p); }
-      if (r.status < 300 && /\bquickstart|sandbox|api\s?key\b/i.test(r.body)) score += 2;
+      // soft-404/auth-wall guard: login redirects and app shells are not portals
+      const isLoginWall = [401, 403].includes(r.status) ||
+        /\/(login|signin|sign-in|signup|auth-redirect)([/?]|$)/.test(new URL(r.finalUrl).pathname);
+      const isAppShell = r.status < 300 && /<html/i.test(r.body) && stripTagsLen(r.body) < 400;
+      if (r.status < 300 && !isLoginWall && !isAppShell) {
+        score += 2; seen.push(p);
+        if (/\bquickstart\b|\bsandbox\b|api\s?key/i.test(r.body)) score += 2;
+      }
       if (score >= 6) break;
     }
     if (score >= 6) return [result(this.ids[0], "pass", 6, 6, `Developer portal present (${seen.join(", ")}) with quickstart/key guidance.`)];
