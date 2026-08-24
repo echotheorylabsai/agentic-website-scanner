@@ -122,11 +122,27 @@ function issueOrderKey(c: ScoredCheck, gains: Map<string, number>): [number, num
   return [tierRank, accessRank, gain];
 }
 
+/** Label bands (approximate, from observed reports) — refined by harness snapshots. */
+const DEFAULT_LABELS: Array<[number, string]> = [
+  [95, "Exceptional agent experience"],
+  [86, "Strong technical baseline"],
+  [70, "Solid foundation with gaps"],
+  [48, "Emerging agent readiness"],
+  [28, "Early-stage agent accessibility"],
+  [-Infinity, "Agents are likely to struggle"],
+];
+
+export function lookupLabel(score: number): string {
+  for (const [min, label] of DEFAULT_LABELS) if (score >= min) return label;
+  return "Agents are likely to struggle";
+}
+
 /** Build the PublicScanReport from a scored scan (round(raw,1) serialization). */
 export function serializeReport(
   raw: RawScore,
   checks: ScoredCheck[],
   meta: SerializeMeta,
+  catalogNames?: Map<string, string>,
 ): {
   target: string; display_target: string; report_url: string;
   score: number; score_label: string | null; scanned_at: string;
@@ -138,13 +154,14 @@ export function serializeReport(
   };
   issues: Array<{ id: string; name: string; tier: string; result: "failed" | "partial"; details: string | null; recommendation: string | null }>;
 } {
-  void checks;
+  const { issues } = estGains(checks);
+  const named = issues.map((i) => ({ ...i, name: catalogNames?.get(i.id) ?? i.name }));
   return {
     target: meta.target,
     display_target: meta.displayTarget,
     report_url: meta.reportUrl,
     score: raw.score,
-    score_label: raw.label,
+    score_label: raw.label ?? lookupLabel(raw.score),
     scanned_at: meta.scannedAt,
     eligible_checks: raw.eligibleChecks,
     score_breakdown: {
@@ -152,7 +169,7 @@ export function serializeReport(
       recommended: { earned: round1(raw.recommendedRaw), available: 20, passing: raw.passing.recommended, total: raw.totals.recommended },
       bonus: { points: Math.round(round1(raw.bonusRaw)), positive_signals: raw.bonusSignals },
     },
-    issues: [],
+    issues: named,
   };
 }
 

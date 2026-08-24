@@ -168,9 +168,9 @@ export async function* runScan(
 
   yield { type: "scan_complete", result: preGatingResult };
   yield { type: "discovery_phase", step: "Assessing product relevance" };
+  yield { type: "relevance_assessed", naCheckIds: assessed.naCheckIds, reasons: assessed.reasons, score: raw.score, grade: raw.grade };
   yield { type: "discovery_phase", step: "Generating summary" };
   yield { type: "discovery_phase", step: "Archiving report" };
-  yield { type: "relevance_assessed", naCheckIds: assessed.naCheckIds, reasons: assessed.reasons, score: raw.score, grade: raw.grade };
   yield { type: "summary_ready", agenticSummary: buildSummary(scored, raw) };
 
   if (opts.onComplete) await opts.onComplete({ gated: scored, assessed, raw });

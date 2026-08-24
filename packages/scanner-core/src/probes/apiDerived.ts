@@ -22,8 +22,10 @@ export class FunctionCallingCompatProbe implements Probe {
   async run({ ctx }: ProbeContext): Promise<ProbeResult[]> {
     if (!ctx.restSurface) return [result(this.ids[0], "na", 0, 2, "No OpenAPI spec found - function-calling compatibility check not applicable.")];
     const s = specText(ctx);
-    const ops = (s.match(/"?(?:get|post|put|patch|delete)"?\s*:\s*\{/g) ?? []).length;
-    const described = (s.match(/"?description"?\s*:/g) ?? []).length;
+    // JSON: "get": { ... } · YAML: get: newline-indented block
+    const ops = (s.match(/"?(?:get|post|put|patch|delete)"?\s*:(?:\s*\{|\s*\n)/g) ?? []).length;
+    const opBlocks = s.split(/"?(?:get|post|put|patch|delete)"?\s*:(?:\s*\{|\s*\n)/).slice(1);
+    const described = opBlocks.filter((b) => /\bdescription\b\s*:/.test(b.slice(0, 600))).length;
     const ratio = ops === 0 ? 0 : described / ops;
     if (ratio >= 1.5) return [result(this.ids[0], "pass", 2, 2, `Operations richly described (${ops} ops, ${described} descriptions) — LLM function-calling ready.`)];
     if (ratio >= 0.8) return [result(this.ids[0], "warning", 1, 2, `Operation descriptions sparse (ratio ${ratio.toFixed(2)}) — add per-operation summaries for tool use.`)];

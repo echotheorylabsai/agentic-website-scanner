@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { runScan } from "../src/engine.js";
+import { makeFetcher } from "../src/fetcher.js";
+import type { FetchedResponse } from "../src/fetcher.js";
 import type { ScanOutput } from "../src/engine.js";
 import { startFixtureServer } from "./utils/fixtureServer.js";
 import type { FixtureServer } from "./utils/fixtureServer.js";
@@ -11,6 +13,15 @@ const HOME = `<!doctype html><html><head><title>T</title>
 <script type="application/ld+json">{"@type":"Organization","name":"T","url":"https://t.test","sameAs":["https://x.social/t"],"contactPoint":{},"address":{}}</script></body></html>`;
 
 let fx: FixtureServer;
+
+/** Fixture-local fetcher: registry/npm/pypi lookups resolve to 404 — no live internet. */
+const hermeticFetcher = async (url: string | URL, opts?: any): Promise<FetchedResponse> => {
+  const s = url.toString();
+  if (s.includes("registry.npmjs.org") || s.includes("pypi.org")) {
+    return { url: s, finalUrl: s, status: 404, headers: {}, body: "not found" };
+  }
+  return makeFetcher(10_000)(url, opts);
+};
 
 beforeAll(async () => {
   fx = await startFixtureServer({
@@ -40,7 +51,7 @@ describe("engine", () => {
     const events: any[] = [];
     let persisted: ScanOutput | null = null;
     for await (const ev of runScan(fx.base, {
-      fetchAs: (u, o) => import("../src/fetcher.js").then((m) => m.makeFetcher()(u, o)),
+      fetchAs: hermeticFetcher,
       onComplete: async (out) => { persisted = out; },
     })) {
       events.push(ev);
@@ -63,7 +74,7 @@ describe("engine", () => {
   it("persists BEFORE emitting scan_archived", async () => {
     let persistedAtFrame: number | null = null;
     const frames: string[] = [];
-    for await (const ev of runScan(fx.base, { onComplete: async () => { persistedAtFrame = frames.length; } })) {
+    for await (const ev of runScan(fx.base, { fetchAs: hermeticFetcher, onComplete: async () => { persistedAtFrame = frames.length; } })) {
       frames.push(ev.type);
     }
     expect(persistedAtFrame).not.toBeNull();
@@ -90,7 +101,7 @@ describe("relevance gating via engine", () => {
     void collect;
     // direct: run once and capture via onComplete
     let out: ScanOutput | null = null;
-    for await (const ev of runScan(fx.base, { onComplete: async (o) => { out = o; } })) { void ev; }
+    for await (const ev of runScan(fx.base, { fetchAs: hermeticFetcher, onComplete: async (o) => { out = o; } })) { void ev; }
     const gatedIds = new Set(out!.gated.map((g) => g.id));
     for (const id of ["api-error-model", "response-schema-coverage"]) {
       expect(gatedIds.has(id)).toBe(true);
@@ -111,7 +122,7 @@ describe("relevance gating — no-API context", () => {
       "/": (_q, res) => { res.setHeader("content-type", "text/html"); res.end(`<html><head><title>T</title></head><body><h1>T</h1>${"<p>lorem ipsum </p>".repeat(60)}</body></html>`); },
     });
     let out: ScanOutput | null = null;
-    for await (const ev of runScan(fx2.base, { onComplete: async (o) => { out = o; } })) { void ev; }
+    for await (const ev of runScan(fx2.base, { fetchAs: hermeticFetcher, onComplete: async (o) => { out = o; } })) { void ev; }
     await fx2.close();
     const naIds = new Set(out!.assessed.naCheckIds);
     for (const id of ["api-error-model", "api-versioning-policy", "pagination-shape", "async-job-pattern", "response-schema-coverage"]) {

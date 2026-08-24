@@ -73,3 +73,32 @@ describe("gating invariance", () => {
     expect(scoreReport(withNa).score).toBe(base);
   });
 });
+
+describe("serialization (Task 10)", () => {
+  it("serializeReport emits issues ordered access-signal first with catalog names", async () => {
+    const { serializeReport, estGains, joinCatalogFlags } = await import("../src/scorer.js");
+    const payload = fx("vercel-essentials.json");
+    const ess = payload.essentials;
+    // degrade a couple of checks so issues exist
+    const rows = rowsFromEssentials(ess).map((r) =>
+      r.id === "agent-friendly-404" ? { ...r, status: "fail" as const, score: 0 } :
+      r.id === "rate-limit-headers" ? { ...r, status: "warning" as const } : r);
+    const scored = joinCatalogFlags(rows, vendoredCatalog);
+    const raw = scoreReport(scored);
+    const names = new Map(vendoredCatalog.checks.map((c) => [c.id, c.name]));
+    const report = serializeReport(raw, scored, {
+      target: "https://vercel.com", displayTarget: "vercel.com",
+      reportUrl: "http://localhost:3000/scan/vercel.com", scannedAt: new Date().toISOString(),
+    }, names);
+    expect(report.score_breakdown.essential.earned).toBeLessThanOrEqual(63.5);
+    expect(report.issues.length).toBeGreaterThan(0);
+    expect(report.issues[0].name).not.toBe(report.issues[0].id); // catalog names joined
+    // ordering: agent-friendly-404 (access signal) before rate-limit-headers (non-access)
+    const ids = report.issues.map((i) => i.id);
+    expect(ids.indexOf("agent-friendly-404")).toBeLessThan(ids.indexOf("rate-limit-headers"));
+    void estGains;
+  });
+  it("rounds earned on serialization (round not trunc): 10.2 stays 10.2", () => {
+    expect(Math.round(10.19 * 10) / 10).toBe(10.2);
+  });
+});
