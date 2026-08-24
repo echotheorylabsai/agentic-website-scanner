@@ -1,6 +1,6 @@
 # Agentic Website Scanner — UX & Interaction Design Spec
 
-**Date:** 2026-08-23 · **Rev:** 2 (post adversarial review — incorporates all BLOCKER/MAJOR findings)
+**Date:** 2026-08-23 · **Rev:** 3 (post adversarial review — incorporates all BLOCKER/MAJOR findings)
 **Status:** Approved design (sections approved in chat; rev-2 corrections from independent Fable 5 review)
 **Companion:** `is-agentic-reverse-engineering-primer.md` (validated research)
 
@@ -107,12 +107,20 @@ reports
 ## 4. Scoring — pinned to Ora's published model
 
 **Source of truth:** `GET https://ora.ai/api/checks?include=essentials`
-(pinned snapshot vendored to `catalog.json`; startup drift-guard asserts
-`contractVersion`).
+(pinned snapshot vendored to `catalog.json`; vendored VERBATIM (real field names: `tier`, `applicability`, `maturity`,
+`specUrl`, …); drift check runs via `compare.ts check-catalog`, not every
+startup (preserves Ora read budget).
 
-Grouping uses **Ora's `essentialsTier` field — never the native `tier`**
-(the two diverge for 23+ checks; e.g. `agent-friendly-404` is native-
-`recommended` but Essential; `json-ld` native-`required` but Recommended).
+Grouping uses **Ora's `essentialsTier` field — never the native `tier`**.
+Vocabulary correction (rev 3): `essentialsTier ∈ {required, recommended, emerging}`
+— the literal value `essential` does NOT exist in the catalog; Essential pool =
+checks with `essentialsTier === 'required'`; `emerging` ⇒ bonus-only.
+
+**Bonus-only rule (validated across vercel/eve/meta, 233/233 checks):**
+`bonusOnly = essentialsBonusOnly OR nativeBonus`, single exception:
+`markdown-negotiation-vary` stays in the Essential pool. Checks flagged
+`essentialsExcluded=true` leave every pool. Where available, Ora's per-domain
+`essentials.checks[].{tier,bonus,fraction}` overrides static flags as ground truth.
 
 ```text
 fraction      = score / max_score            (per eligible non-excluded check)
@@ -127,11 +135,25 @@ score         = round( trunc0.1(Essential) + trunc0.1(Rec) + trunc0.1(Bonus) )
 
 Serialization rules (for diff-comparability):
 - store raw earned values; **serialize `earned = round(raw, 1)`**
-- issues = eligible, non-bonus-only, fraction<1, ordered Essential→Recommended,
-  `failed`(fraction=0) before `partial`(0<fraction<1)
+- issues = eligible, non-bonus-only, fraction<1; order (observed rule):
+  tier → access-signal checks first (`agent-crawler-reachability`, `bot-detection`,
+  `content-no-js`, `docs-auth-gate`, `redirect-hygiene`, `agent-friendly-404`,
+  `ax-*`) → computed gain desc → native `estScoreGain` desc
 
 `grade`: A+ ≥95 · A ≥86 · B ≥70 · C ≥48 · D ≥28 · F else (applies to this
 essentials score; Ora's native grade is different — do not mix).
+
+Gating is split by nature:
+- **Deterministic dependent-family N/A (our engine):** REST-dependent family
+  (×8), GraphQL family (×6), MCP sub-checks (×15), payments protocols (×6),
+  `ax-*` family — N/A iff its detector found no surface ("No REST API surface
+  detected" etc.). Detector checks themselves are NEVER auto-N/A'd by us.
+- **Product-level relevance (LLM-judged upstream):** advisory in comparisons,
+  never replicated. Observed live order: `scan_complete{provisional}` →
+  `relevance_assessed{naCheckIds,reasons,score,grade}` → final.
+Our engine computes its authoritative score after deterministic gating.
+Partial credit comes from per-probe rubric tables (condition → score/max_score)
+defined in the plan; a pass may carry fraction <1 (e.g. mcp-server 5/6).
 
 `label` bands (approximate, from 18 observed reports; diff labels advisory):
 ≥85 "Strong technical baseline" · 70–85 "Ready with a few material gaps" ·
@@ -189,7 +211,7 @@ after; reconnect with backoff.
 ### Machine consumption
 
 ```text
-GET /scan/<host>                  Accept: text/html|text/markdown (Vary: Accept)
+GET /scan/<host>  Accept html → page; Accept markdown → middleware rewrites to /api/scan/markdown route (Next.js forbids route.ts beside page.tsx); Vary: Accept on both
 GET /api/v1/report?url=           PublicScanReport-compatible JSON (§10)
 GET /api/report/full?url=         our extended report (grade, layers, N/A list)
 GET /api/scan/stream?target=      SSE (real protocol names, §7)
@@ -204,7 +226,7 @@ GET /api/scan/stream?target=      SSE (real protocol names, §7)
 | POST | `/api/scan` `{url}` | validate → dedupe-collapse → 202 `{target, display_target, report_url}` |
 | GET | `/api/v1/report?url=` | latest completed; **schema copied verbatim from is-agentic's `PublicScanReport`** (`additionalProperties:false`, nullable score, tier enum incl. `bonus`) |
 | GET | `/api/report/full?url=` | extended: grade, per-layer detail, N/A reasons, estGain |
-| GET | `/api/scan/stream?target=` | SSE |
+| GET | `/api/scan/stream?target=` | If no report exists and none running: **starts a scan** (official CLI depends on this), then streams. Live attach · in-memory ring-buffer replay · cache-hit triple (`kind_detected→scan_complete{servedFromCache:true,resultAgeSeconds}→scan_archived`). `scan_archived` fires only after the reports row commits |
 | GET | `/api/v1/checks` | pinned catalog |
 
 Errors: RFC 9457 problem+json with `type,title,status,detail,instance,code,resolution`.
@@ -214,7 +236,7 @@ No rate limiting (local single user).
 
 `kind_detecting` · `kind_detected` · `scan_init` (roster+totals) ·
 `layer_start`* · `check_start` · `check_complete` · `layer_complete` ·
-`relevance_assessed` (**our addition — carries gating results**) ·
+`relevance_assessed` (real Ora event carrying `{naCheckIds,reasons,score,grade}`) ·
 `summary_ready` · `scan_complete` · `scan_archived` · `error`.
 
 Cache-hit shape mirrors observed reality:
@@ -250,6 +272,19 @@ reports through the OFFICIAL CLI renderer — the primary side-by-side harness.
 | E2E | hero flow, instant completed-report load, markdown negotiation |
 
 ---
+
+### Rev-3 additional rulings
+
+- Fetcher UA roster includes `ora-agent` (observed in real evidence).
+- Catalog JSON vendored verbatim; real field names preserved.
+- Replay uses an in-memory ring buffer per running scan; DB report is the
+  post-completion source of truth.
+- Assigned previously-orphaned requirements: Rescan = manual button on report
+  page; Docs & Methodology pages carry integration + scoring content (static);
+  harness stores `?format=audit` snapshots and diffs against reference
+  `scanned_at`, never wall-clock; F-band label resolved from harness snapshots
+  into a data table (not hardcoded guesswork); `prev_scan_id` set by job runner
+  at completion.
 
 ## 10. Comparison Harness (the validation goal)
 
