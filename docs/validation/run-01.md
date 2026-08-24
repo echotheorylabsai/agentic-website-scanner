@@ -219,3 +219,23 @@ Of 140 (check,status) pairs observed on ≥2 domains: 55 byte-identical outright
 ## Conclusion for our clone
 
 is-agentic's deterministic-check text is **template + measured data** — exactly the model our implementation follows: adopt data-free strings verbatim, fill parameterized templates with our own measurements, reject templates whose data slots we can't fill (documented keep-ours list). Our text is accurate by the same standard the original tool meets.
+
+---
+
+# Addendum 6: LLM-Generated Content Inventory — what is-agentic has that our clone doesn't
+
+**Sources:** official scan page full-text (vercel.com), Ora payload fields, SSE captures.
+
+| # | LLM content | What it is | Example (vercel.com) | In our clone? |
+|---|---|---|---|---|
+| 1 | **Task + Agent Journey** | A real AI agent is set a task ("What does vercel.com do and who is it for?"), browses the site (17 steps, 5 reasoning steps, 5 searches), and the journey is visualized as step chips | home → docs → /solutions → search… | ❌ No agent runs |
+| 2 | **Evaluator notes** | LLM paragraph grading the agent run | "The agent successfully gathered enough information… but had to rely heavily on web search results… The vercel.com domain itself is a JavaScript-heavy Next.js application that returns minified HTML…" | ❌ |
+| 3 | **agenticSummary** | One-line LLM situation summary | "Vercel offers strong API access, but lacks developer resource discoverability." | ⚠️ We emit a template string ("Scored 92/100 (A); biggest gap: …") |
+| 4 | **Site category** | LLM classification | "Infrastructure & DevOps" | ❌ |
+| 5 | **accessSignals groups** | Curated/LLM semantic groupings with states (clear/mixed): "Agents can reach the site", "Core content is available", "Navigation fails safely", "Controls are understandable" | 2/2, 1/2, 1/2, 4/4 passed | ❌ (groupings don't exist in catalog — deliberately not invented) |
+| 6 | **activeSurfaces** | Per-surface maturity scores with pass counts: Public website 79% (12/17), API 92% (11/12), Authentication 63% (1/3), MCP 83% (0/1) — formula unknown, "mature checks" weighting not public | — | ⚠️ We show honest per-layer pass ratios (different metric) |
+| 7 | **topFixes with estScoreGain** | LLM-prioritized fixes with fractional estimated gains | "Developer resource discoverability — estScoreGain 6.1" | ⚠️ We compute deterministic estGains (fractional, unrounded) |
+| 8 | **Product-level relevance gating** | LLM decides which checks apply per domain | example.org: 11 API-family checks excluded → score 51 vs our 35 | ❌ Deterministic gating only (documented) |
+| 9 | **Web-search checks** | agentic-search-specific, brand-search-accuracy run real web searches | "vercel.com appears at position #1 in a clean brand-name search for 'Vercel infrastructure'" | ❌ External search backend, out of scope |
+
+**Deterministic text (fix/recommendation/evidence) is NOT on this list** — verified standardized and replicated (Addendum 5).

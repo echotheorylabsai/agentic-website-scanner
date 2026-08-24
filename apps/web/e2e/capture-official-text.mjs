@@ -1,0 +1,10 @@
+import { chromium } from "playwright";
+import { writeFileSync } from "node:fs";
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+await page.goto("https://is-agentic.com/scan/vercel.com", { waitUntil: "networkidle", timeout: 60000 });
+await page.waitForTimeout(2500);
+const text = await page.evaluate(() => document.body.innerText);
+writeFileSync("/tmp/official-vercel-fulltext.txt", text);
+console.log("captured", text.length, "chars");
+await browser.close();
