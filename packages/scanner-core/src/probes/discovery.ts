@@ -103,7 +103,7 @@ export class AgentInstructionProbe implements Probe {
           : [result(this.ids[0], "warning", 1, 3, `Instruction file at ${p} found but no when-to-use guidance.`)];
       }
     }
-    return [result(this.ids[0], "fail", 0, 3, "No agent instruction file with when-to-use guidance found.", "Add an AGENTS.md (or llms.txt section) telling agents when to reach for your site.")];
+    return [result(this.ids[0], "fail", 0, 3, "No agent instruction file with when-to-use guidance found", "Add an AGENTS.md (or llms.txt section) telling agents when to reach for your site.")];
   }
 }
 

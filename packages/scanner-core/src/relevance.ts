@@ -43,12 +43,12 @@ export function applyRelevance(results: ProbeResult[], ctx: ScanContext): { gate
     else if (REST_SPEC_DEPENDENT.has(r.id) && !ctx.restSurface) {
       naReason = "No OpenAPI spec found - check not applicable.";
     } else if (GRAPHQL_FAMILY.has(r.id) && !ctx.graphqlSurface) {
-      naReason = "No GraphQL surface detected on this domain";
+      naReason = NA_TEXT.graphql;
     } else if (MCP_SUBCHECKS.has(r.id)) {
-      if (!ctx.mcpManifest && ctx.mcpHandshake === "none") naReason = "No MCP server detected on this domain";
-      else if (ctx.mcpHandshake === "auth-gated") naReason = "MCP server requires authentication";
+      if (!ctx.mcpManifest && ctx.mcpHandshake === "none") naReason = NA_TEXT.mcp;
+      else if (ctx.mcpHandshake === "auth-gated") naReason = NA_TEXT.mcpAuth;
     } else if (PAYMENTS_FAMILY.has(r.id) && !ctx.commerceSignals && r.score === 0) {
-      naReason = "No commerce signals detected on this domain";
+      naReason = NA_TEXT.commerce;
     } else if ((r.id === "docs-auth-gate" || r.id === "redirect-hygiene") && r.status === "na") {
       naReason = r.details; // homepage-unreachable cascade from the probe itself
     }

@@ -36,10 +36,11 @@ describe("checkText.json adopted pairs", () => {
     corpus += fs.readFileSync(path.resolve(__dirname, "../src/relevance.ts"), "utf8");
     corpus += fs.readFileSync(path.resolve(__dirname, "../src/engine.ts"), "utf8");
     for (const pair of checkText.adopted as any[]) {
+      expect(pair.channel, `${pair.checkId}/${pair.status}: channel required`).toBe("details");
       if (FAMILY_NA.has(pair.text)) continue; // family strings checked separately
-      // probe literals may interpolate — match the longest static prefix (pre-backtick)
-      const staticPrefix = pair.text.split("${")[0].slice(0, 60);
-      expect(corpus.includes(staticPrefix), `${pair.checkId}/${pair.status}: "${staticPrefix}" not found in probe sources`).toBe(true);
+      // FULL-string match (static part) — trailing-period precision matters
+      const staticPart = pair.text.split("${")[0];
+      expect(corpus.includes(staticPart), `${pair.checkId}/${pair.status}: full static text "${staticPart}" not found in probe sources`).toBe(true);
     }
   });
 

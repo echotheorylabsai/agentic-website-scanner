@@ -11,7 +11,7 @@ import {
   AuthMdExistsProbe, CliToolProbe, ApiErrorModelProbe, ApiVersioningPolicyProbe,
   PaginationShapeProbe, AsyncJobPatternProbe, RestSdkPackagesProbe,
 } from "./probes/apiDerived";
-import { mcpProbes, McpWellKnownDiscoveryLateProbe, McpWellKnownDiscoveryProbe, McpServerProbe } from "./probes/mcp";
+import { mcpProbes, McpWellKnownDiscoveryLateProbe, McpWellKnownDiscoveryProbe, McpServerProbe, CommerceSignalsDetector } from "./probes/mcp";
 import { AgentFriendly404Probe, RedirectHygieneProbe } from "./probes/http-semantics";
 import { applyRelevance, NA_TEXT, REST_SPEC_DEPENDENT, GRAPHQL_FAMILY, MCP_SUBCHECKS, PAYMENTS_FAMILY } from "./relevance";
 import type { GatedCheck } from "./relevance";
@@ -121,13 +121,11 @@ export async function* runScan(
     new AgentFriendly404Probe(), new RedirectHygieneProbe(),
     new McpWellKnownDiscoveryLateProbe(),
   ];
-  const ordered: Probe[] = [homeProbe, ...detectors, ...dependent];
-
   const emitted = new Set<string>();
 
   // --- Phase 1: run home + detector probes to establish surface facts ---
-  const detectorSet = new Set<Probe>([homeProbe, ...detectors]);
-  for (const probe of [homeProbe, ...detectors]) {
+  const commerceDetector = new CommerceSignalsDetector(); // phase-1: sets ctx.commerceSignals
+  for (const probe of [homeProbe, ...detectors, commerceDetector]) {
     const layerOf = (id: string) => {
       const catRow = catalog.checks.find((c) => c.id === id);
       return { layerId: catRow?.layer ?? probe.layer, layerName: LAYER_NAMES[catRow?.layer ?? probe.layer] ?? probe.layer };

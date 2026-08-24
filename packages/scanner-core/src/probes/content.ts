@@ -124,7 +124,11 @@ export class OrgSchemaCompletenessProbe implements Probe {
       const t = Array.isArray(n["@type"]) ? n["@type"].map(String) : [String(n["@type"] ?? "")];
       return t.some((x) => x.toLowerCase().includes("organization") || x.toLowerCase().includes("business"));
     }) as ({ contactPoint?: unknown; address?: unknown } | undefined);
-    if (!org) return [result(this.ids[0], "fail", 0, 2, "No JSON-LD found - Organization schema missing")];
+    if (!org) {
+      // Ora distinguishes: no JSON-LD at all vs JSON-LD present without Organization (observed eve.dev)
+      const hasAnyLd = /application\/ld\+json/i.test(home.body);
+      return [result(this.ids[0], "fail", 0, 2, hasAnyLd ? "No Organization type found in JSON-LD" : "No JSON-LD found - Organization schema missing")];
+    }
     const both = Boolean(org.contactPoint && org.address);
     return both
       ? [result(this.ids[0], "pass", 2, 2, "Organization schema includes contactPoint and address.")]

@@ -6,7 +6,8 @@
   "knownDivergences": [
    "meta.ai agent-crawler-reachability recommendation (report-issues channel) differs from catalog \u2014 1-in-60",
    "meta.ai REST-family per-check na wording (we adopt the family-wide string observed on eve/example.org)",
-   "eve.dev ucp-support/acp-support na details carry LLM-tailored text \u2014 we serve the family string"
+   "eve.dev ucp-support/acp-support na details carry LLM-tailored text \u2014 we serve the family string",
+   "meta.ai rate-limit-headers: we na (combined REST+GraphQL gate, [static] text) where Ora's fresh scan scores it \u2014 Ora's own behavior is inconsistent across scans"
   ]
  },
  "adopted": [
@@ -129,7 +130,7 @@
    "channel": "details",
    "text": "No JSON-LD structured data found on homepage",
    "provenance": [
-    "eve.dev",
+    "meta.ai",
     "example.org"
    ],
    "datumAudit": "pass",
@@ -180,10 +181,10 @@
    "channel": "details",
    "text": "No JSON-LD found - Organization schema missing",
    "provenance": [
-    "eve.dev",
+    "eve.dev*",
     "example.org"
    ],
-   "datumAudit": "pass",
+   "datumAudit": "pass (both Ora branches implemented)",
    "signOff": "auto (datum-free)"
   },
   {
@@ -252,20 +253,8 @@
    "channel": "details",
    "text": "No declared OAuth scopes, security schemes, or scoped-permission documentation found",
    "provenance": [
-    "eve.dev",
-    "meta.ai"
-   ],
-   "datumAudit": "pass",
-   "signOff": "auto (datum-free)"
-  },
-  {
-   "checkId": "scoped-permissions",
-   "status": "na",
-   "channel": "details",
-   "text": "No declared OAuth scopes, security schemes, or scoped-permission documentation found",
-   "provenance": [
-    "eve.dev",
-    "example.org"
+    "meta.ai",
+    "vercel.com"
    ],
    "datumAudit": "pass",
    "signOff": "auto (datum-free)"
@@ -420,6 +409,7 @@
   "redirect-hygiene/pass": "live page count",
   "agent-crawler-reachability/pass": "Ora lists per-UA results for UAs we don't probe (ChatGPT-User etc.) \u2014 live datum mismatch",
   "metadata-completeness/pass": "Ora's text lists their signal set (lang, og:image, og:type); we check a different set \u2014 datum mismatch",
-  "robots-agent-user-policy/pass": "semantic mismatch: Ora pass = no restriction; our pass = explicit directives exist"
+  "robots-agent-user-policy/pass": "semantic mismatch: Ora pass = no restriction; our pass = explicit directives exist",
+  "scoped-permissions/na": "unreachable in our code (we never emit scoped-permissions na) \u2014 Ora na'd it on eve/example.org"
  }
 }

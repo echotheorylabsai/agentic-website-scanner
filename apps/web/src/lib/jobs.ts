@@ -126,6 +126,9 @@ async function executeScan(job: RunningJob, target: string, _attempt = 0) {
 
     // persist per-check rows
     for (const g of out.gated) {
+      // B4-1: na rows serve catalog recommendation; null ONLY on REST-family branch
+      const isRestFamilyNa = g.status === "na" && (g.na_reason ?? g.details ?? "").startsWith("No REST API surface");
+      const recs = new Map(vendoredCatalog.checks.filter((c) => c.recommendation).map((c) => [c.id, c.recommendation as string]));
       await db.insert(schema.checks).values({
         scan_id: scanRow!.id,
         check_id: g.id,
@@ -139,7 +142,9 @@ async function executeScan(job: RunningJob, target: string, _attempt = 0) {
         fraction: g.max_score ? g.score / g.max_score : 0,
         status: g.status === "na" ? "na" : g.status,
         details: g.details,
-        recommendation: g.recommendation ?? null,
+        recommendation: g.status === "na"
+          ? (isRestFamilyNa ? null : (recs.get(g.id) ?? g.recommendation ?? null))
+          : (recs.get(g.id) ?? g.recommendation ?? null),
         na_reason: g.na_reason ?? null,
         eligible: g.eligible,
         occurrences: 1,

@@ -29,6 +29,20 @@ export class McpWellKnownDiscoveryLateProbe implements Probe {
   }
 }
 
+/** Phase-1 detector: sets ctx.commerceSignals from homepage content so the
+ *  payments family gate (and probes) behave correctly. Emits no check frames. */
+export class CommerceSignalsDetector implements Probe {
+  ids = [] as unknown as readonly [string];
+  layer = "payments" as const;
+  async run({ ctx }: ProbeContext): Promise<ProbeResult[]> {
+    const body = ctx.homepage?.body ?? "";
+    if (/\bx402\b|\bucp\b|\bacp\b|\bap2\b|machine[- ]?and[- ]?agent[- ]?payments|checkout|cart\b|pricing\b|subscribe/i.test(body)) {
+      ctx.commerceSignals = true;
+    }
+    return [];
+  }
+}
+
 export class McpWellKnownDiscoveryProbe implements Probe {
   ids = ["mcp-well-known-discovery"] as const; // bonus
   layer = "usability" as const;

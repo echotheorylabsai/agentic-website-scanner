@@ -86,7 +86,7 @@ Business logic for every deterministic check is now either **byte-matched to obs
 **Scope:** Adopt is-agentic's deterministic text for checks exactly similar to ours. LLM text/checks out of scope. Plan independently reviewed (Opus 5, 3 rounds → amendments incorporated).
 
 ## What changed
-- **`checkText.json`** — 35 adopted (check,status)→details pairs, each passing a 3-layer gate:
+- **`checkText.json`** — 32 adopted (check,status)→details pairs (after per-pair sign-off: 3 unreachable/mismatched pairs rejected), each passing a 3-layer gate:
   ≥2-domain byte-match → datum audit (Ora probe constants rejected: "6 AI agent user-agents", live counts) → no-conflict (pairs with cross-domain wording conflicts rejected unless branch reproducible) → per-pair manual sign-off.
 - **Fix lines**: catalog recommendation (Ora-authored) is now primary for all non-pass outcomes (137/137 official rows byte-match catalog).
 - **N/A channel**: gated N/A now sets `details` = na text (Ora-wire-faithful; previously stale probe text). Captured family strings adopted: REST, commerce, rate-limit (combined REST+GraphQL gate), MCP.
@@ -106,6 +106,6 @@ Business logic for every deterministic check is now either **byte-matched to obs
 **Known temporal inconsistency (documented):** Ora's own eve.dev scans disagree on rate-limit-headers — older capture: na with our adopted text; fresh capture (score-71 run): scored 0.00. We follow the [static]-captured text.
 
 ## Verification
-- 42/42 tests pass, tsc clean
+- 42 core tests + 3 web schema tests pass (45 total), tsc clean on both packages
 - C1 golden: every adopted (checkId,status)→text pair asserted present in emitted sources; family strings match NA_TEXT exactly
 - Per-check diff re-run: artifacts/deep-diff-post-text.txt

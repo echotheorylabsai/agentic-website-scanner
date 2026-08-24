@@ -8,7 +8,7 @@
   [                   med] rest-sdk-packages                  theirs=0.67   ours=1.00   
   [                   med] agent-instruction                  theirs=0.67   ours=0.33   
 
-=== eve.dev: ours 65 vs theirs 71 · overlap 34, exact 30
+=== eve.dev: ours 66 vs theirs 71 · overlap 34, exact 30
   [                  HIGH] agent-instruction                  theirs=0.00   ours=1.00   
   [                  HIGH] rest-sdk-packages                  theirs=0.67   ours=0.00   
   [                   med] content-no-js                      theirs=0.67   ours=1.00   

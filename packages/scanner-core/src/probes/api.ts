@@ -37,7 +37,7 @@ export class ScopedPermissionsProbe implements Probe {
     if (hasSecuritySchemes && scopes && opSecurity) return [result(this.ids[0], "pass", 5, 5, "Scoped permissions defined and enforced per-operation.")];
     if (hasSecuritySchemes && scopes) return [result(this.ids[0], "warning", 2, 5, "Scopes defined globally but not enforced per-operation.", "Reference security scopes at each operation so agents request least privilege.")];
     if (hasSecuritySchemes) return [result(this.ids[0], "warning", 2, 5, "Auth schemes defined without named scopes.")];
-    return [result(this.ids[0], "fail", 0, 5, "No declared OAuth scopes, security schemes, or scoped-permission documentation found.", "Define scoped permissions (read:/write:) so agents can request least privilege.")];
+    return [result(this.ids[0], "fail", 0, 5, "No declared OAuth scopes, security schemes, or scoped-permission documentation found", "Define scoped permissions (read:/write:) so agents can request least privilege.")];
   }
 }
 
