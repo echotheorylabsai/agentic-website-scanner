@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { joinCatalogFlags, scoreReport, gradeFor } from "../src/scorer.js";
+import { joinCatalogFlags, scoreReport, gradeFor, estGains } from "../src/scorer.js";
 import type { GatedCheck } from "../src/relevance.js";
 import { vendoredCatalog } from "../src/schema.js";
 
@@ -101,4 +101,29 @@ describe("serialization (Task 10)", () => {
   it("rounds earned on serialization (round not trunc): 10.2 stays 10.2", () => {
     expect(Math.round(10.19 * 10) / 10).toBe(10.2);
   });
+});
+
+describe("issue ordering vs official reports (fractional gains)", () => {
+  // Same membership always; vercel reproduces exact order. eve/meta have an
+  // unobservable intra-tier tie-break in Ora (documented residual).
+  for (const [fx, report, exact] of [
+    ["vercel-essentials.json", "real-report-vercel.json", true],
+    ["eve-essentials.json", "real-report-eve.json", false],
+    ["meta-essentials.json", "real-report-meta.json", false],
+  ] as const) {
+    it(`${report}: overlapping issue ${exact ? "order matches exactly" : "set matches"}`, () => {
+      const ess = JSON.parse(readFileSync(new URL(`./fixtures/golden/${fx}`, import.meta.url), "utf8")).essentials;
+      const scored = joinCatalogFlags(rowsFromEssentials(ess), vendoredCatalog);
+      const { issues } = estGains(scored);
+      const ours = issues.map((i) => i.id);
+      const official = JSON.parse(readFileSync(new URL(`./fixtures/${report}`, import.meta.url), "utf8"))
+        .issues.map((i: { id: string }) => i.id);
+      const common = official.filter((id: string) => ours.includes(id));
+      if (exact) {
+        expect(ours.filter((id) => common.includes(id))).toEqual(common);
+      } else {
+        expect([...ours].sort()).toEqual([...common].sort());
+      }
+    });
+  }
 });

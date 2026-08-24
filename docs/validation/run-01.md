@@ -66,3 +66,15 @@ Persisted under `artifacts/`: per-domain stream captures (`stream-*.txt`), serve
 ## Conclusion
 
 Business logic for every deterministic check is now either **byte-matched to observed Ora behavior** or documented as a bounded residual. The scoring formula reproduces published scores exactly given identical inputs. Remaining score deltas trace to (a) roster coverage, (b) documented heuristic residuals, (c) temporal skew when targets ship changes between the two scanners' runs (eve.dev case proved our side correct).
+
+## Independent 7-agent verification of reused-logic claims (post-run audit)
+
+| Claim | Verdict |
+|---|---|
+| Scoring formula | CONFIRMED (goldens pass; rounding verified) |
+| Pool rules | CONFIRMED (essential pool = 11 on vercel; nuance: unknown ids still bonus-eligible) |
+| Catalog verbatim | CONFIRMED (byte-identical, 124 checks, version pinned) |
+| Gating families | PARTIAL — meta.ai split matches exactly; Ora also N/A'd rate-limit-headers on eve.dev (reason: "No REST or GraphQL surface detected") which we score as fail; 2 MCP bonus-check eligibility edges differ (~0 score impact) |
+| Issue ordering | PARTIAL → FIXED — integer estGains collapsed ties; now fractional gains reproduce vercel's official order exactly; eve/meta have an unobservable intra-tie tie-break |
+| SSE protocol | PARTIAL → doc fixed — engine already matched capture (late discovery_phase straddles relevance_assessed 1+2); claim text corrected; per-type validation is required-fields + unknown-type rejection, not key-strict |
+| Label bands | CONFIRMED at all four data points (cutoffs between observations not uniquely provable with n=4) |

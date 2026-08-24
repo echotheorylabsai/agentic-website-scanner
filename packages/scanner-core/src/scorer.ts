@@ -185,14 +185,20 @@ const round1 = (n: number): number => Math.round(n * 10) / 10;
  * were flipped to a full pass. Used for FindingsList ordering (gain desc).
  */
 export function estGains(checks: ScoredCheck[]): { gains: Map<string, number>; issues: Array<{ id: string; name: string; tier: string; result: "failed" | "partial"; details: string | null; recommendation: string | null }> } {
-  const base = scoreReport(checks).score;
+  // Fractional gains: integer total-score deltas collapse all recommended-tier
+  // flips to ties (observed vs official reports). Use unrounded component sums.
+  const rawSum = (cs: ScoredCheck[]) => {
+    const r = scoreReport(cs);
+    return r.essentialRaw + r.recommendedRaw + r.bonusRaw;
+  };
+  const base = rawSum(checks);
   const gains = new Map<string, number>();
   for (const c of checks) {
     if (!c.eligible || c.essentials_bonus_only) continue;
     if (c.status === "pass" || c.status === "na") continue;
     if (c.max_score === 0 || c.score >= c.max_score) continue;
     const flipped = checks.map((x) => x === c ? { ...x, status: "pass" as const, score: x.max_score } : x);
-    gains.set(c.id, scoreReport(flipped).score - base);
+    gains.set(c.id, Math.round((rawSum(flipped) - base) * 100) / 100);
   }
   const issues = checks
     .filter((c) => c.eligible && !c.essentials_bonus_only && c.status !== "pass" && c.status !== "na")
