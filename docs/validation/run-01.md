@@ -199,3 +199,23 @@ All 11 are API/MCP-family checks that **Ora's LLM relevance pass excluded** from
 - eve/meta OAuth + scoped-permissions: Ora finds auth signals we cannot observe
 - content-no-js on vercel: UA-variant serving (their agent-UA fetch sees markdown)
 - Brand-name discoverability / Agent onboarding friction / Developer resource discoverability: LLM-judged checks, out of scope
+
+---
+
+# Addendum 5: Text Standardization Study — 4 domains (is-agentic.com, ora.ai, vercel.com, eve.dev)
+
+**Question:** does is-agentic serve the same description/fix text for deterministic checks across domains and across pass/fail states?
+
+**Method:** fresh official reports + Ora native-layer payloads for all 4 domains; every (check, status, text) observation grouped and compared; digit/brand/URL normalization to expose underlying templates.
+
+## Findings
+
+**1. Recommendation (Fix) text — YES, standardized.**
+Of 115 checks with observed recommendations: **103 always serve the exact catalog text** — status-independent, domain-independent (137/137 row-level byte-match). 10 checks have per-outcome catalog variants (e.g. payments checks: "if agents transact…" vs default) — still deterministic, just branch-selected. Only 2 (ax-*) lack catalog text.
+
+**2. Evidence (details) text — YES, standardized as data-parameterized templates.**
+Of 140 (check,status) pairs observed on ≥2 domains: 55 byte-identical outright; the remaining 85 all resolve to **the same underlying template once per-domain measurements are normalized** (counts, brand names, URLs, positions, UA lists, JSON-LD types). Examples: "All ⟨N⟩ entries valid with domain-anchored urn:air identifiers", "⟨BRAND⟩ appears at position #⟨N⟩…", "⟨N⟩ chars with H1 but flat heading structure". **Zero freeform LLM prose** in the details/recommendation channels — LLM output is confined to agenticSummary, evaluator notes, the Task section, and product-level relevance gating.
+
+## Conclusion for our clone
+
+is-agentic's deterministic-check text is **template + measured data** — exactly the model our implementation follows: adopt data-free strings verbatim, fill parameterized templates with our own measurements, reject templates whose data slots we can't fill (documented keep-ours list). Our text is accurate by the same standard the original tool meets.
