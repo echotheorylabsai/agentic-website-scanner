@@ -7,7 +7,7 @@ export class ApiSchemaAnalysisProbe implements Probe {
   ids = ["api-schema-analysis"] as const;
   layer = "usability" as const;
   async run({ ctx }: ProbeContext): Promise<ProbeResult[]> {
-    if (!ctx.restSurface) return [result(this.ids[0], "na", 0, 2, "No OpenAPI spec found - schema analysis check not applicable.")];
+    if (!ctx.restSurface) return [result(this.ids[0], "fail", 0, 2, "No OpenAPI spec found - nothing to analyse for reusable schemas.")];
     const s = specText(ctx);
     const schemas = (s.match(/"?components"?\s*:|"?definitions"?\s*:/g) ?? []).length;
     return schemas > 0
@@ -20,12 +20,12 @@ export class FunctionCallingCompatProbe implements Probe {
   ids = ["function-calling-compat"] as const;
   layer = "usability" as const;
   async run({ ctx }: ProbeContext): Promise<ProbeResult[]> {
-    if (!ctx.restSurface) return [result(this.ids[0], "na", 0, 2, "No OpenAPI spec found - function-calling compatibility check not applicable.")];
+    if (!ctx.restSurface) return [result(this.ids[0], "fail", 0, 2, "No OpenAPI spec found - operations cannot be evaluated for LLM tool use.")];
     const s = specText(ctx);
     // JSON: "get": { ... } · YAML: get: newline-indented block
     const ops = (s.match(/"?(?:get|post|put|patch|delete)"?\s*:(?:\s*\{|\s*\n)/g) ?? []).length;
     const opBlocks = s.split(/"?(?:get|post|put|patch|delete)"?\s*:(?:\s*\{|\s*\n)/).slice(1);
-    const described = opBlocks.filter((b) => /\bdescription\b\s*:/.test(b.slice(0, 600))).length;
+    const described = opBlocks.filter((b) => /"?description"?\s*:/.test(b)).length;
     const ratio = ops === 0 ? 0 : described / ops;
     if (ratio >= 1.5) return [result(this.ids[0], "pass", 2, 2, `Operations richly described (${ops} ops, ${described} descriptions) — LLM function-calling ready.`)];
     if (ratio >= 0.8) return [result(this.ids[0], "warning", 1, 2, `Operation descriptions sparse (ratio ${ratio.toFixed(2)}) — add per-operation summaries for tool use.`)];
@@ -51,9 +51,15 @@ export class AuthMdExistsProbe implements Probe {
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
     for (const p of ["/auth.md", "/docs/auth.md", "/.well-known/auth.md"]) {
       const r = await fetchAs(`${url.origin}${p}`);
-      if (r.status < 300 && r.body.trim()) return [result(this.ids[0], "pass", 2, 2, `Auth guidance published at ${p}.`)];
+      const ct = (r.headers["content-type"] ?? "").toLowerCase();
+      // must be a real markdown/text doc with auth guidance — HTML shells and
+      // JSON error bodies are soft-404s (observed vercel.com & meta.ai)
+      const looksMd = !ct.includes("html") && /(^#|\n#|authentication|api[- ]?key|bearer|oauth|token)/i.test(r.body);
+      if (r.status < 300 && looksMd) {
+        return [result(this.ids[0], "pass", 2, 2, `Agent authentication guide published at ${p}.`)];
+      }
     }
-    return [result(this.ids[0], "fail", 0, 2, "No auth.md agent-authentication guide found.")];
+    return [result(this.ids[0], "fail", 0, 2, "No usable auth.md agent-authentication guide found.", "Publish /auth.md explaining how agents authenticate.")];
   }
 }
 
@@ -118,9 +124,16 @@ export class AsyncJobPatternProbe implements Probe {
   async run({ ctx }: ProbeContext): Promise<ProbeResult[]> {
     if (!ctx.restSurface) return [result(this.ids[0], "error", 0, 2, "No OpenAPI spec found - async job pattern check not applicable.")];
     const s = specText(ctx);
-    return /202|job|operation[-_ ]?(id|status)|polling/i.test(s)
-      ? [result(this.ids[0], "pass", 2, 2, "Async job/operation pattern documented (202 + status polling).")]
-      : [result(this.ids[0], "fail", 0, 2, "No async job pattern for long-running operations.")];
+    const has202 = /"?202"?\s*:|\b202\b/.test(s);
+    const pollVocab = /job|operation[-_ ]?(id|status)|polling|try\s+again\s+later|x-status/i.test(s);
+    const pollEndpoint = /(operations|jobs|tasks)\/\{|operation[-_ ]?id|"Retry-After"|status[-_ ]?url/i.test(s);
+    if (has202 && pollEndpoint) {
+      return [result(this.ids[0], "pass", 2, 2, "Async job pattern documented (202 + status endpoint).")];
+    }
+    if (has202 || pollVocab) {
+      return [result(this.ids[0], "warning", 1, 2, has202 ? "202 response documented but no status-endpoint contract." : "Job/polling vocabulary present but no 202 response contract.")];
+    }
+    return [result(this.ids[0], "fail", 0, 2, "No async job pattern for long-running operations.")];
   }
 }
 

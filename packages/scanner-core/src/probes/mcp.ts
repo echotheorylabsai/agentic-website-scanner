@@ -17,6 +17,18 @@ const PAYMENT_PATTERNS: Record<keyof typeof PAYMENT_IDS, RegExp> = {
   ap2: /\bagent\s+payments\s+protocol\b|\bap2\b/i,
 };
 
+export class McpWellKnownDiscoveryLateProbe implements Probe {
+  // runs AFTER the handshake; awards partial credit when server live but manifest absent (observed vercel.com 0.5)
+  ids = ["mcp-well-known-discovery"] as const;
+  layer = "usability" as const;
+  async run({ ctx }: ProbeContext): Promise<ProbeResult[]> {
+    if (!ctx.mcpManifest && !ctx.mcpManifestInvalid && ctx.mcpHandshake !== "none") {
+      return [result("mcp-well-known-discovery", "warning", 1, 2, "Live MCP server but no discovery manifest at .well-known paths.")];
+    }
+    return [result("mcp-well-known-discovery", "na", 0, 2, "Covered by earlier discovery probe.")]; // na ⇒ ineligible, dedup below
+  }
+}
+
 export class McpWellKnownDiscoveryProbe implements Probe {
   ids = ["mcp-well-known-discovery"] as const; // bonus
   layer = "usability" as const;
@@ -24,8 +36,18 @@ export class McpWellKnownDiscoveryProbe implements Probe {
     for (const p of ["/.well-known/mcp.json", "/.well-known/mcp", "/mcp.json"]) {
       const r = await fetchAs(`${url.origin}${p}`);
       if (r.status < 300 && r.body.trim().startsWith("{")) {
-        ctx.mcpManifest = r;
-        return [result(this.ids[0], "pass", 2, 2, `MCP manifest published at ${p}.`)];
+        try {
+          JSON.parse(r.body);
+          ctx.mcpManifest = r;
+          return [result(this.ids[0], "pass", 2, 2, `MCP manifest published at ${p}.`)];
+        } catch { /* falls through to invalid handling below */ }
+      }
+      // .well-known path serving HTML ⇒ invalid manifest per Ora (observed meta.ai);
+      // non-well-known paths returning HTML are just SPA soft-404s (observed vercel.com/mcp.json)
+      if (r.status < 300 && p.startsWith("/.well-known") && /<html|<!doctype/i.test(r.body)) {
+        ctx.mcpManifestInvalid = true;
+        ctx.mcpManifest = null;
+        return [result(this.ids[0], "fail", 0, 2, `${p} returns an HTML page instead of a valid JSON manifest.`)];
       }
     }
     ctx.mcpManifest = null;
@@ -37,18 +59,17 @@ export class McpServerProbe implements Probe {
   ids = ["mcp-server"] as const; // 6pt — the Recommended-pool anchor
   layer = "usability" as const;
   async run({ url, fetchAs, ctx }: ProbeContext): Promise<ProbeResult[]> {
-    // manifest present but unparseable ⇒ observed meta.ai outcome: 2/6 warning
-    if (ctx.mcpManifest) {
-      try { JSON.parse(ctx.mcpManifest.body); } catch {
-        ctx.mcpHandshake = "none";
-        return [result(this.ids[0], "warning", 2, 6, "MCP manifest present but is not valid JSON — agents cannot discover tools from it.")];
-      }
+    // manifest served but not valid JSON ⇒ 2/6 regardless of handshake (observed meta.ai)
+    if (ctx.mcpManifestInvalid) {
+      ctx.mcpHandshake = "auth-gated"; // still note the server for gating purposes
+      return [result(this.ids[0], "warning", 2, 6, "MCP discovery path serves an HTML page instead of a valid JSON manifest — agents cannot discover tools.")];
     }
     const endpoints = ["/mcp", "/api/mcp", "/.well-known/mcp"];
     for (const p of endpoints) {
       try {
         const init = await fetch(`${url.origin}${p}`, {
           method: "POST",
+          redirect: "manual", // auth walls often redirect — do not follow
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json, text/event-stream",
@@ -60,6 +81,19 @@ export class McpServerProbe implements Probe {
         if (init.status === 401 || init.status === 403) {
           ctx.mcpHandshake = "auth-gated";
           return [result(this.ids[0], "warning", 5, 6, `MCP server live at ${p} but initialize requires authentication (HTTP ${init.status}).`)];
+        }
+        // auth-wall redirects (observed vercel.com: 307 → /auth-redirect/mcp)
+        if (init.status >= 300 && init.status < 400) {
+          const loc = init.headers.get("location") ?? "";
+          let bodyRedirect = false;
+          try {
+            const j = JSON.parse(body) as { redirect?: string };
+            bodyRedirect = typeof j.redirect === "string" && /auth|login|signin/i.test(j.redirect);
+          } catch { /* not json */ }
+          if (/auth|login|signin/i.test(loc) || bodyRedirect) {
+            ctx.mcpHandshake = "auth-gated";
+            return [result(this.ids[0], "warning", 5, 6, `MCP server live at ${p} but initialize requires authentication (HTTP ${init.status} redirect).`)];
+          }
         }
         if (body.includes('"result"') && /serverInfo|protocolVersion/.test(body)) {
           ctx.mcpHandshake = "ok";

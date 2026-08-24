@@ -26,6 +26,7 @@ export interface ScanContext {
   restOrDocsEvidence: boolean;         // REST API OR developer docs present
   commerceSignals: boolean;            // pricing/cart/checkout signals
   mcpHandshake: "ok" | "auth-gated" | "none";
+  mcpManifestInvalid: boolean; // .well-known returned 200 but not valid JSON
 }
 
 export interface Probe {
@@ -48,6 +49,7 @@ export function newScanContext(): ScanContext {
     restOrDocsEvidence: false,
     commerceSignals: false,
     mcpHandshake: "none",
+    mcpManifestInvalid: false,
   };
 }
 

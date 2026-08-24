@@ -11,7 +11,7 @@ import {
   AuthMdExistsProbe, CliToolProbe, ApiErrorModelProbe, ApiVersioningPolicyProbe,
   PaginationShapeProbe, AsyncJobPatternProbe, RestSdkPackagesProbe,
 } from "./probes/apiDerived";
-import { mcpProbes, McpWellKnownDiscoveryProbe, McpServerProbe } from "./probes/mcp";
+import { mcpProbes, McpWellKnownDiscoveryLateProbe, McpWellKnownDiscoveryProbe, McpServerProbe } from "./probes/mcp";
 import { AgentFriendly404Probe, RedirectHygieneProbe } from "./probes/http-semantics";
 import { applyRelevance } from "./relevance";
 import type { GatedCheck } from "./relevance";
@@ -119,8 +119,11 @@ export async function* runScan(
     ...apiDerivedProbes(),
     ...mcpProbes().filter((p) => !(p instanceof McpWellKnownDiscoveryProbe) && !(p instanceof McpServerProbe)),
     new AgentFriendly404Probe(), new RedirectHygieneProbe(),
+    new McpWellKnownDiscoveryLateProbe(),
   ];
   const ordered: Probe[] = [homeProbe, ...detectors, ...dependent];
+
+  const emitted = new Set<string>();
 
   for (const probe of ordered) {
     const layerOf = (id: string) => {
@@ -134,6 +137,8 @@ export async function* runScan(
     }
     try {
       for (const r of await probe.run({ url, fetchAs, ctx })) {
+        if (emitted.has(r.id)) continue; // late probes never override detectors
+        emitted.add(r.id);
         results.push(r);
         const catRow = catalog.checks.find((c) => c.id === r.id);
         const { layerId, layerName } = layerOf(r.id);

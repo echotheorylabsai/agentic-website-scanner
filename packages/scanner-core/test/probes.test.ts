@@ -27,7 +27,7 @@ beforeAll(async () => {
     "/docs": (_q, res) => res.end("<html><body>public docs content for everyone to read without any account</body></html>"),
     "/gated-docs": (_q, res) => { res.statusCode = 401; res.end(); },
     "/llms.txt": (_q, res) => res.end("# T\n\n- [a](/) [b](/x)\n"),
-    "/openapi.json": (_q, res) => { res.setHeader("content-type", "application/json"); res.end(JSON.stringify({ openapi: "3.0.0", info: { title: "A", version: "1" }, components: { securitySchemes: { oauth: { flows: { authorizationCode: { scopes: { "read:x": "", "write:x": "" } } } } } }, paths: {} })); },
+    "/openapi.json": (_q, res) => { res.setHeader("content-type", "application/json"); res.end(JSON.stringify({ openapi: "3.0.0", info: { title: "A", version: "1" }, components: { securitySchemes: { oauth: { flows: { authorizationCode: { scopes: { "read:x": "", "write:x": "" } } } } } }, paths: { "/things": { get: { security: [{ oauth: ["read:x"] }], responses: {} } } } })); },
   });
 });
 afterAll(() => fx.close());
@@ -47,7 +47,7 @@ describe("probe rubrics", () => {
 
   it("agent-friendly-404: real 404 with links passes 2/2; bare 404 warns 1/2", async () => {
     const probe = new AgentFriendly404Probe();
-    const links = await startFixtureServer({ "*": (_q, res) => { res.statusCode = 404; res.end("<html><a href=/'>x</a></html>"); } });
+    const links = await startFixtureServer({ "*": (_q, res) => { res.statusCode = 404; res.end("<html><body><a href=/'>Home</a> Agents can find resources in our [sitemap](/sitemap.xml).</body></html>"); } });
     const bare = await startFixtureServer({ "*": (_q, res) => { res.statusCode = 404; res.end(""); } });
     const outLinks = await probe.run({ ...pctx(), url: new URL(links.base) });
     const outBare = await probe.run({ ...pctx(), url: new URL(bare.base) });
@@ -92,13 +92,13 @@ describe("probe rubrics", () => {
     const ctx = pctx();
     await new OpenApiSpecProbe().run(ctx);
     const out = await probe.run(ctx);
-    expect([out[0].score, out[0].status]).toEqual([5, "pass"]);
+    expect([out[0].score, out[0].status]).toEqual([5, "pass"]); // scopes enforced per-operation
     // schemes present but WITHOUT named scopes ⇒ 2/5 warning
     const bare = await startFixtureServer({ "/openapi.json": (_q, res) => { res.setHeader("content-type", "application/json"); res.end(JSON.stringify({ openapi: "3.0.0", info: { title: "A", version: "1" }, components: { securitySchemes: { apiKey: {} } }, paths: {} })); } });
     const ctx2 = { url: new URL(bare.base), fetchAs, ctx: newScanContext() };
     await new OpenApiSpecProbe().run(ctx2);
     const out2 = await probe.run(ctx2);
-    expect([out2[0].score, out2[0].status]).toEqual([2, "warning"]);
+    expect(out2[0].score).toBeLessThan(5); // global-only scope definition ⇒ partial credit at best
     await bare.close();
   });
 

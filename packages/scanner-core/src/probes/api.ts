@@ -30,10 +30,13 @@ export class ScopedPermissionsProbe implements Probe {
   layer = "usability" as const;
   async run({ ctx }: ProbeContext): Promise<ProbeResult[]> {
     const s = specText(ctx);
-    const hasSecurity = /"?security(?:Schemes)?"?\s*:/i.test(s);
-    const scopes = /\bscopes\b|read:|write:|admin:/i.test(s);
-    if (hasSecurity && scopes) return [result(this.ids[0], "pass", 5, 5, "Auth scheme with named permission scopes defined.")];
-    if (hasSecurity) return [result(this.ids[0], "warning", 2, 5, "Auth schemes defined without named scopes.")];
+    const hasSecuritySchemes = /"?securitySchemes"?\s*:/i.test(s);
+    const scopes = /\bscopes\b|["']?(?:read|write|admin):[\w:]+["']?/i.test(s);
+    // operation-level security references: "security": inside the paths block
+    const opSecurity = new RegExp('"?paths"?\\s*:\\s*\\{[\\s\\S]*?"?security"?\\s*:\\s*\\[').test(s);
+    if (hasSecuritySchemes && scopes && opSecurity) return [result(this.ids[0], "pass", 5, 5, "Scoped permissions defined and enforced per-operation.")];
+    if (hasSecuritySchemes && scopes) return [result(this.ids[0], "warning", 2, 5, "Scopes defined globally but not enforced per-operation.", "Reference security scopes at each operation so agents request least privilege.")];
+    if (hasSecuritySchemes) return [result(this.ids[0], "warning", 2, 5, "Auth schemes defined without named scopes.")];
     return [result(this.ids[0], "fail", 0, 5, "No securitySchemes/scopes in the API surface.", "Define scoped permissions (read:/write:) so agents can request least privilege.")];
   }
 }
@@ -60,11 +63,9 @@ export class RateLimitHeadersProbe implements Probe {
     const h = r.headers;
     const rl = h["ratelimit-limit"] ?? h["x-ratelimit-limit"] ?? h["x-rate-limit-limit"];
     const ra = h["ratelimit-remaining"] ?? h["x-ratelimit-remaining"];
-    if (rl || ra) return [result(this.ids[0], "pass", 2, 2, `Rate-limit headers observed (${rl ? `Limit: ${rl}` : ""}${ra ? ` Remaining: ${ra}` : ""}).`)];
-    // docs evidence also acceptable
-    const docs = await fetchAs(`${url.origin}/docs`, { accept: "text/html" }).catch(() => null);
-    if (docs && /rate\s?limit/i.test(docs.body)) return [result(this.ids[0], "warning", 1, 2, "Rate limits documented but no live headers on API responses.")];
-    return [result(this.ids[0], "fail", 0, 2, "No rate-limit headers or documented limits found.", "Return RateLimit-* headers so agents can pace requests.")];
+    if (rl && ra) return [result(this.ids[0], "pass", 2, 2, `Rate-limit headers observed (Limit: ${rl}, Remaining: ${ra}).`)];
+    if (rl || ra) return [result(this.ids[0], "warning", 1, 2, `Partial rate-limit headers (${rl ? `Limit: ${rl}` : `Remaining: ${ra}`}).`)];
+    return [result(this.ids[0], "fail", 0, 2, "No live rate-limit headers on API responses.", "Return RateLimit-* headers so agents can pace requests.")];
   }
 }
 
@@ -74,21 +75,28 @@ export class JsonErrorResponsesProbe implements Probe {
   async run({ url, fetchAs, ctx }: ProbeContext): Promise<ProbeResult[]> {
     // wrong-method probe against the API root
     try {
-      const res = await fetch(`${url.origin}/api`, {
-        method: "DELETE",
-        headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(10_000),
-      });
-      const ct = (res.headers.get("content-type") ?? "").toLowerCase();
-      const body = await res.text();
-      const jsonish = ct.includes("json") && /[{[]/.test(body);
-      if (res.status >= 400 && jsonish) {
-        return [result(this.ids[0], "pass", 4, 4, `Errors returned as JSON problem bodies (HTTP ${res.status}, ${ct.split(";")[0]}).`)];
+      let best = -1;
+      for (const p of ["/api", "/api/v1"]) {
+        const res = await fetch(`${url.origin}${p}`, {
+          method: "DELETE",
+          headers: { Accept: "application/json" },
+          signal: AbortSignal.timeout(10_000),
+        });
+        const ct = (res.headers.get("content-type") ?? "").toLowerCase();
+        const body = await res.text();
+        const jsonish = ct.includes("json") && /[{[]/.test(body);
+        const isHtmlShell = ct.includes("html");
+        if (res.status >= 400 && jsonish) { best = 4; break; }
+        // HTML error bodies are SPA catch-alls — no API contract observable (observed eve.dev)
+        if (res.status >= 400 && !isHtmlShell && best < 1) best = 1;
       }
-      if (res.status >= 400) {
-        return [result(this.ids[0], "warning", 2, 4, `Error status ${res.status} but body is not application/json.`)];
+      if (best === 4) {
+        return [result(this.ids[0], "pass", 4, 4, "Errors returned as JSON problem bodies.")];
       }
-      return [result(this.ids[0], "warning", 2, 4, "Probe path accepted DELETE — no error contract observable at /api.")];
+      if (best === 1) {
+        return [result(this.ids[0], "warning", 1, 4, "Error statuses returned but bodies are not application/json.", "Return RFC 9457 problem+json bodies on API errors.")];
+      }
+      return [result(this.ids[0], "warning", 1, 4, "Probe path accepted DELETE — no error contract observable at /api.")];
     } catch {
       return [result(this.ids[0], "error", 0, 4, ctx.restSurface ? "Network failure during error-probe." : "No API surface to probe for error contracts.")];
     }
@@ -105,10 +113,14 @@ const DOC_SIGNALS: Array<[RegExp, string]> = [
 export class PublicApiProbe implements Probe {
   ids = ["public-api"] as const;
   layer = "usability" as const;
-  async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
+  async run({ url, fetchAs, ctx }: ProbeContext): Promise<ProbeResult[]> {
     let signals = 0;
+    if (ctx.restSurface) signals += 5;
     const apiPage = await fetchAs(`${url.origin}/api`, { accept: "application/json" }).catch(() => null);
     if (apiPage && apiPage.status < 400) signals += 3;
+    // documented endpoints on /docs are strong public-API evidence (observed eve.dev)
+    const docsPage = await fetchAs(`${url.origin}/docs`, { accept: "text/html" }).catch(() => null);
+    if (docsPage && docsPage.status < 400 && /\bendpoints?\b|authentication\b|curl\s|api[- ]?key/i.test(docsPage.body)) signals += 4;
     const home = await fetchAs(url, { accept: "text/html" }).catch(() => null);
     const text = `${home?.body ?? ""}`;
     for (const [re] of DOC_SIGNALS.slice(1)) if (re.test(text)) signals++;
@@ -138,7 +150,7 @@ export class DeveloperPortalProbe implements Probe {
   layer = "usability" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
     let score = 0; const seen: string[] = [];
-    for (const p of ["/developers", "/dev", "/build", "/integrations"]) {
+    for (const p of ["/developers", "/dev", "/build", "/integrations", "/docs"]) {
       const r = await fetchAs(`${url.origin}${p}`, { accept: "text/html" });
       if (r.status < 300) { score += 2; seen.push(p); }
       if (r.status < 300 && /\bquickstart|sandbox|api\s?key\b/i.test(r.body)) score += 2;
@@ -154,9 +166,11 @@ export class OAuthSupportProbe implements Probe {
   ids = ["oauth-support"] as const;
   layer = "usability" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
-    const wk = await fetchAs(`${url.origin}/.well-known/oauth-authorization-server`).catch(() => null);
-    if (wk?.status === 200 && /authorization_endpoint/.test(wk.body)) {
-      return [result(this.ids[0], "pass", 5, 5, "OAuth authorization-server metadata responds at .well-known.")];
+    for (const wkPath of ["oauth-authorization-server", "oauth-protected-resource"]) {
+      const wk = await fetchAs(`${url.origin}/.well-known/${wkPath}`).catch(() => null);
+      if (wk?.status === 200 && /^\s*[\{"/]/.test(wk.body)) {
+        return [result(this.ids[0], "pass", 5, 5, `${wkPath} metadata responds with JSON at .well-known.`)];
+      }
     }
     const home = await fetchAs(`${url.origin}/`, { accept: "text/html" }).catch(() => null);
     if (home && /oauth2?\b/i.test(home.body)) return [result(this.ids[0], "warning", 2, 5, "OAuth referenced on site but no metadata endpoint.")];

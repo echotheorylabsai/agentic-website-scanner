@@ -22,9 +22,10 @@ export class AgentFriendly404Probe implements Probe {
         `Return a real HTTP 404 (or 410) status for nonexistent paths - never a 200 with your app shell.`)];
     }
     if ((res.status === 404 || res.status === 410)) {
-      return hasLinks
-        ? [result(this.ids[0], "pass", 2, 2, `404 responses include navigation links (${ct || "no content-type"}).`)]
-        : [result(this.ids[0], "warning", 1, 2, `404 returned but body has no links for agents to follow.`)];
+      const agentGuidance = hasLinks && (/markdown|\[[^\]]+\]\([^)]+\)|agents?/i.test(res.body));
+      return agentGuidance
+        ? [result(this.ids[0], "pass", 2, 2, `404 responses include agent-oriented guidance (${ct || "no content-type"}).`)]
+        : [result(this.ids[0], "warning", 1, 2, `404 returned ${hasLinks ? "but without agent-oriented guidance" : "but body has no links for agents to follow"}.`, hasLinks ? undefined : "Give the 404 response a short markdown body pointing agents at your site map.")];
     }
     return [result(this.ids[0], "warning", 1, 2, `Fake path returned HTTP ${res.status} instead of 404.`)];
   }

@@ -15,7 +15,7 @@ export class ContentNoJsProbe implements Probe {
     const text = stripTags(home.body).replace(/\s+/g, " ").trim();
     const chars = text.length;
     const h1 = /<h1[\s>]/i.test(home.body);
-    const depth = (text.match(/\b[a-z]{4,}\b/gi) ?? []).length >= 150;
+    const depth = (text.match(/\b[a-z]{4,}\b/gi) ?? []).length >= 250;
     if (chars >= 500 && h1 && depth) {
       return [result(this.ids[0], "pass", 3, 3, `Server HTML carries ${chars} chars of readable copy with an H1 heading.`)];
     }
@@ -34,15 +34,23 @@ export class MetadataCompletenessProbe implements Probe {
   async run({ ctx }: ProbeContext): Promise<ProbeResult[]> {
     const home = ctx.homepage;
     if (!home) return [result(this.ids[0], "error", 0, 2, "Homepage not fetched.")];
-    const signals = [
+    const signalPatterns = [
       /<title[^>]*>[^<\s][^<]*<\/title>/i,
       /<meta[^>]+name=["']description["'][^>]+content=["'][^"']{20,}/i,
       /<link[^>]+rel=["']canonical["']/i,
       /<meta[^>]+property=["']og:title["']/i,
-    ].filter((re) => re.test(home.body)).length;
-    if (signals === 4) return [result(this.ids[0], "pass", 2, 2, "Title tag, meta description, canonical URL and og:title all present.")];
-    if (signals === 3) return [result(this.ids[0], "warning", 1, 2, "3 of 4 metadata signals present (missing one of title/description/canonical/og:title).")];
-    return [result(this.ids[0], "fail", 0, 2, `Only ${signals} of 4 core metadata signals found in server HTML.`)];
+      /<meta[^>]+property=["']og:description["']/i,
+      /<meta[^>]+name=["']twitter:card["']/i,
+    ];
+    const foundSignals = signalPatterns.filter((re) => re.test(home.body));
+    const signals = foundSignals.length;
+    if (signals >= 4) {
+      return [result(this.ids[0], "pass", 2, 2, `${signals} of 6 metadata signals present (title, description, canonical, OG, Twitter).`)];
+    }
+    if (signals >= 1) {
+      return [result(this.ids[0], "warning", 1, 2, `Only ${signals} of 6 metadata signals present in server HTML.`)];
+    }
+    return [result(this.ids[0], "fail", 0, 2, "No metadata signals found in server HTML.")];
   }
 }
 
@@ -127,17 +135,21 @@ export class OrgSchemaCompletenessProbe implements Probe {
 export class TrustAnchorsProbe implements Probe {
   ids = ["trust-anchors"] as const;
   layer = "usability" as const;
-  async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
-    const paths = ["/about", "/contact", "/privacy"];
+  async run({ url, fetchAs, ctx }: ProbeContext): Promise<ProbeResult[]> {
+    const paths = ["/about", "/contact", "/privacy", "/about-us", "/privacy-policy", "/contact-us"];
     const ok = await Promise.all(paths.map(async (p) => {
       try {
         const r = await fetchAs(`${url.origin}${p}`);
         return r.status < 300 && stripTags(r.body).replace(/\s+/g, " ").trim().length >= 500;
       } catch { return false; }
     }));
-    const n = ok.filter(Boolean).length;
-    if (n === 3) return [result(this.ids[0], "pass", 2, 2, "About, Contact and Privacy pages all resolve with substantial content.")];
-    if (n === 2) return [result(this.ids[0], "warning", 1, 2, "2 of 3 trust pages (about/contact/privacy) resolve with substance.")];
+    // homepage footer links to anchor pages count even if slugs differ
+    const home = ctx.homepage?.body ?? "";
+    const linked = ["/about", "/contact", "/privac"].filter((k) => new RegExp(`href="[^"]*${k}`, "i").test(home)).length;
+    const found = Math.max(ok.filter(Boolean).length ? Math.ceil(ok.filter(Boolean).length * 2) : 0, linked);
+    const n = found;
+    if (n >= 3) return [result(this.ids[0], "pass", 2, 2, "About, Contact and Privacy anchors all resolve.")];
+    if (n >= 2) return [result(this.ids[0], "warning", 1, 2, "Most trust anchors (about/contact/privacy) resolve.")];
     return [result(this.ids[0], "fail", 0, 2, `Only ${n} of 3 trust-anchor pages carry substantive content.`)];
   }
 }
@@ -149,13 +161,13 @@ export class DocsAuthGateProbe implements Probe {
     if (!ctx.homepage || ctx.homepage.status >= 400) {
       return [result(this.ids[0], "na", 0, 2, "Homepage unreachable; docs auth-gate cannot be assessed.")];
     }
-    const paths = ["/docs", "/docs/getting-started", "/developers"];
+    const paths = ["/docs", "/docs/getting-started"];
     for (const p of paths) {
       try {
         const r = await fetchAs(`${url.origin}${p}`, { accept: "text/html" });
-        const loginWall = r.status === 401 || r.status === 403 ||
-          /log\s?in|sign\s?in/i.test(r.finalUrl) ||
-          (r.status < 300 && /(?:please )?(?:sign|log)[- ]?in to (?:view|continue|access)/i.test(stripTags(r.body).slice(0, 2000)) && stripTags(r.body).replace(/\s+/g, "").length < 800);
+        // wall = explicit auth status OR redirect to a login/signup URL on the docs path itself
+        const loginWall = [401, 403].includes(r.status) ||
+          /\/(login|signin|sign-in|signup|auth-redirect)([/?]|$)/.test(new URL(r.finalUrl).pathname);
         if (loginWall) {
           return [result(this.ids[0], "fail", 0, 2, `Documentation behind an auth wall at ${p} (HTTP ${r.status}); agents cannot read gated docs.`, "Serve public, unauthenticated documentation pages.")];
         }

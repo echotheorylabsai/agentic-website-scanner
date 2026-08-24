@@ -18,7 +18,7 @@ export class LlmsTxtFormattingProbe implements Probe {
   layer = "discovery" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
     const r = await fetchAs(`${url.origin}/llms.txt`);
-    if (r.status >= 300) return [result(this.ids[0], "na", 0, 2, "No /llms.txt to format-check.")];
+    if (r.status >= 300) return [result(this.ids[0], "fail", 0, 2, "/llms.txt missing — agents have no formatted discovery file.", "Publish /llms.txt with an H1 and a bulleted link list.")];
     const hasH1 = /^#\s+\S/m.test(r.body);
     const linkCount = (r.body.match(/\[[^\]]+\]\([^)]+\)/g) ?? []).length;
     return hasH1 && linkCount >= 3
@@ -94,12 +94,12 @@ export class AgentInstructionProbe implements Probe {
   ids = ["agent-instruction"] as const;
   layer = "discovery" as const;
   async run({ url, fetchAs }: ProbeContext): Promise<ProbeResult[]> {
-    for (const p of ["/agents.md", "/agent.md", "/.well-known/agents.md", "/llms-full.txt"]) {
+    for (const p of ["/agents.md", "/AGENTS.md", "/agent.md", "/.well-known/agents.md", "/llms-full.txt"]) {
       const r = await fetchAs(`${url.origin}${p}`);
       if (r.status < 300 && r.body.trim()) {
         const whenToUse = /when\s+to\s+use|use\s+this\s+(?:site|page)|capabilities/i.test(r.body);
         return whenToUse
-          ? [result(this.ids[0], "pass", 3, 3, `Agent instruction file at ${p} includes a "when to use" section.`)]
+          ? [result(this.ids[0], "pass", 3, 3, `Agent instruction file at ${p} includes orientation guidance.`)]
           : [result(this.ids[0], "warning", 1, 3, `Instruction file at ${p} found but no when-to-use guidance.`)];
       }
     }
